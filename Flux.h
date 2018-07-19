@@ -99,10 +99,11 @@ public:
     /// Copy Constructor for Flux
     Flux(const Flux&)
     {;};
+    void SetRootFile(string rootfile){rfile=rootfile;};
     void SetInputData(vector<vector<vector<double> > >Data){ExperimentalData=Data;};
     void SetFluxParameter(vector<vector<double> > Data){FluxParameter=Data;};
     void SetEfficiencyParameter(vector<vector<double> >EFit){Parameter_Efficiency=EFit;}
-    void SetFileName(string Name){FileName=Name;FileName.erase(FileName.end()-4,FileName.end());};
+    void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
     void SetFitParameters(vector<double>par){Parameter_Flux=par;};
     void SetNThread(unsigned int t){NumberOfThreads=t;};
     void SetDetectorAngles(vector<double> Angles){DetectorAngles=Angles;};
@@ -133,8 +134,9 @@ private:
     vector<bool> ThreadIsFinished;
     static void CallParallelFluxFitThread(void* Adress);
 
-
-
+    string FileName= "";
+    string rfile = "";
+    TFile* RFile;
     vector<double>GetParameterFlux(){return Parameter_Flux;}
     bool PhotonFluxFitter(unsigned int NThread);
     unsigned int NFit,NumberOfFits,NumberOfThreads,NumberOfRestFits;
@@ -153,7 +155,6 @@ private:
     const double hqc= 197.3269788*1000;//keV fm
     Functions::EFunc FitFunctionEnum;
     
-    string FileName;
 
 };
 class ThreadCallerFlux

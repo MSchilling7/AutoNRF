@@ -14,6 +14,7 @@
 #include <ctime>
 #include <ratio>
 #include<omp.h>
+#include<TFile.h>
 
 
 #include"DataReader.h"
@@ -38,11 +39,7 @@ int main(int argc, char **argv)
   using std::string;
   
   bool input        = false;
-  bool source       = false;
-  bool efficiency   = false;
-  bool simulation   = false;
-  bool photonflux   = false;
-  bool experimental = false;
+  bool rootbool     = false;
   int c           = 0;
   
   string InputFile;
@@ -51,6 +48,7 @@ int main(int argc, char **argv)
   string SimulationDataFile;
   string FCalibrationDataFile;
   string ExperimentalDataFile;
+  string rootfile;
   
   unsigned int TNumber=1;
   
@@ -59,19 +57,15 @@ int main(int argc, char **argv)
       static struct option long_options[] =
       {
           {"input",                  required_argument,       0, 'i'},
-          {"source",                 required_argument,       0, 's'},
-          {"efficiency",             required_argument,       0, 'e'},
-          {"simulation",             required_argument,       0, 'S'},
-          {"flux",                   required_argument,       0, 'f'},
           {"thread",                 required_argument,       0, 't'},
-          {"experimental",           required_argument,       0, 'E'},
+          {"root",                   required_argument,       0, 'r'},
           {"help",                   no_argument,             0, 'h'},
           {"help",                   no_argument,             0, '?'}
       };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      c = getopt_long (argc, argv, "i:s:e:S:f:t:E:h:?",
+      c = getopt_long (argc, argv, "i:t:r:h:?",
          long_options, &option_index);
 
       switch (c)
@@ -85,32 +79,13 @@ int main(int argc, char **argv)
         input=true;
         break;
         
-        case 's':
-        SourceDataFile=optarg;
-        source=true;
-        break;
-
-        case 'e':
-        ECalibrationDataFile=optarg;
-        efficiency=true;
-        break;   
-        
-        case 'S':
-        SimulationDataFile=optarg;
-        simulation=true;
-        break;  
-
-        case 'f':
-        FCalibrationDataFile=optarg;
-        photonflux=true;
-        break;
-        
         case 't':
         TNumber=atoi(optarg);            
         
-        case 'E':
-        ExperimentalDataFile=optarg;
-        experimental=true;
+        case 'r':
+        rootfile="Output/";
+        rootfile+=optarg;
+        rootbool=true;
         break;
 
         case 'h':
@@ -157,7 +132,6 @@ int main(int argc, char **argv)
 gErrorIgnoreLevel = 1001;//Supress ROOT Info output
 Output out;
 out.SetDate();
-input=true;
 
 high_resolution_clock::time_point start = high_resolution_clock::now();
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
@@ -171,17 +145,20 @@ vector<vector<double> > FitParameterArray_Efficency,FitParameterArray_Flux;
 vector<double> DetectorAngles;
 vector<double> ECalTime;
 
+if(rootbool)
+{
+    TFile* RFile = TFile::Open(rootfile.c_str(),"RECREATE");
+    RFile->mkdir("Efficiency","Efficiency");
+    RFile->mkdir("Flux","Flux");
+    RFile->Write();
+    RFile->Close();
+}
+
 DataReader read;
-if(input){
-    source=true;
-    efficiency=true;
-    simulation=true;
-    photonflux=true;
-    experimental=true;
+if(input)
+{
     
-    
-//         read.SetInputName(InputFile);
-    read.SetInputName("input.par");
+    read.SetInputName(InputFile);
     read.SetInputParameter();
     DataFileArray=read.GetDataFileArray();
     FitFunctionArray=read.GetFitFunctionArray();
@@ -190,7 +167,10 @@ if(input){
     DetectorAngles=read.GetDetectorAnglesArray();
     ECalTime=read.GetECalTimeArray();
 }
-if(!input)DataFileArray.resize(1);
+if(!input)
+{
+    cout<<"No input file given!"<<endl;exit(0);
+}
 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
 // // // 
@@ -223,23 +203,19 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
     
-    if(source){
         if(ISourceDataFile!="default" && ISourceDataFile!="DEFAULT")
         {
             read.SetInputName(ISourceDataFile);
-            if(ISourceDataFile=="flag" || ISourceDataFile=="FLAG")read.SetInputName(SourceDataFile);
-            SData=read.GetSourceDataArray();
             read.SetSourceData();
-//                 read.Print2DArray(SData);
+            SData=read.GetSourceDataArray();
         }
-    }
-    if(!source || ISourceDataFile=="default" || ISourceDataFile=="DEFAULT"){
-        read.SetInputName("56CoData.dat");
-        ISourceDataFile="56CoData.dat";
-        read.SetSourceData();
-        SData=read.GetSourceDataArray();
-//             read.Print2DArray(SData);
-    }
+        if(ISourceDataFile=="default" || ISourceDataFile=="DEFAULT")
+        {
+            read.SetInputName("56CoData.dat");
+            ISourceDataFile="56CoData.dat";
+            read.SetSourceData();
+            SData=read.GetSourceDataArray();
+        }
     
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
         // // // 
@@ -247,49 +223,39 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-    if(efficiency){
+    
         if(IECalibrationDataFile!="default" && IECalibrationDataFile!="DEFAULT")
         {
             read.SetInputName(IECalibrationDataFile);
-            if(IECalibrationDataFile=="flag" || IECalibrationDataFile=="FLAG")read.SetInputName(ECalibrationDataFile);
             read.SetECalData();
             ECalData=read.GetECalDataArray();
-//                 read.Print2DArray(ECalData);
         }
-    }
-    
-    if(!efficiency || IECalibrationDataFile=="default" || IECalibrationDataFile=="DEFAULT"){
-        read.SetInputName("ECalData.dat");
-        IECalibrationDataFile="ECalData.dat";
-        read.SetExperimentalData();
-        ECalData=read.GetExperimentalDataArray();
-//             read.Print2DArray(ECalData);
-    }
-    
+        if(IECalibrationDataFile=="default" || IECalibrationDataFile=="DEFAULT")
+        {
+            read.SetInputName("ECalData.dat");
+            IECalibrationDataFile="ECalData.dat";
+            read.SetExperimentalData();
+            ECalData=read.GetExperimentalDataArray();
+        }    
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
         // // // 
         // // // Read Simulation Data
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-    if(simulation){
         if(ISimulationDataFile!="default" && ISimulationDataFile!="DEFAULT")
         {
             read.SetInputName(ISimulationDataFile);
-            if(ISimulationDataFile=="flag" || ISimulationDataFile=="FLAG")read.SetInputName(SimulationDataFile);
             read.SetSimulationData();
             SimulationData=read.GetSimulationDataArray();
-//                 read.Print2DArray(SimulationData);
         }
-    }
-    
-    if(!simulation || ISimulationDataFile=="default" || ISimulationDataFile=="DEFAULT"){
-        read.SetInputName("SimulationData.dat");
-        ISimulationDataFile="SimulationData.dat";
-        read.SetSimulationData();
-        SimulationData=read.GetSimulationDataArray();
-//             read.Print2DArray(SimulationData);
-    }
+        if(ISimulationDataFile=="default" || ISimulationDataFile=="DEFAULT")
+        {
+            read.SetInputName("SimulationData.dat");
+            ISimulationDataFile="SimulationData.dat";
+            read.SetSimulationData();
+            SimulationData=read.GetSimulationDataArray();
+        }
 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
         // // // 
@@ -297,24 +263,19 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-    if(photonflux){
         if(IFCalibrationDataFile!="default" && IFCalibrationDataFile!="DEFAULT")
         {
             read.SetInputName(IFCalibrationDataFile);
-            if(IFCalibrationDataFile=="flag" || IFCalibrationDataFile=="FLAG")read.SetInputName(FCalibrationDataFile);
             read.SetFluxCalibrationData();
             FluxCalibrationData=read.GetFluxCalibrationDataArray();
-//                 read.Print2DArray(FluxCalibrationData);
         }
-    }
-    
-    if(!photonflux|| IFCalibrationDataFile=="default" ||IFCalibrationDataFile=="DEFAULT"){
-        read.SetInputName("Bor_Parameter.dat");
-        IFCalibrationDataFile="Bor_Parameter.dat";
-        read.SetFluxCalibrationData();
-        FluxCalibrationData=read.GetFluxCalibrationDataArray();
-//             read.Print2DArray(FluxCalibrationData);
-    }
+        if(IFCalibrationDataFile=="default" ||IFCalibrationDataFile=="DEFAULT")
+        { 
+            read.SetInputName("Bor_Parameter.dat");
+            IFCalibrationDataFile="Bor_Parameter.dat";
+            read.SetFluxCalibrationData();
+            FluxCalibrationData=read.GetFluxCalibrationDataArray();
+        }
 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
         // // // 
@@ -322,24 +283,19 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
     
-    if(experimental){
         if(IExperimentalDataFile!="default" && IExperimentalDataFile!="DEFAULT")
         {
             read.SetInputName(IExperimentalDataFile);
-            if(IExperimentalDataFile=="flag" ||IExperimentalDataFile=="FLAG")read.SetInputName(ExperimentalDataFile);
             read.SetExperimentalData();
             ExperimentalData=read.GetExperimentalDataArray();
-//                 read.Print2DArray(ExperimentalData);
         }
-    }
-    
-    if(!experimental || IExperimentalDataFile=="default" ||IExperimentalDataFile=="DEFAULT"){
-        read.SetInputName("ExperimentalData.dat");
-        IExperimentalDataFile="ExperimentalData.dat";
-        read.SetExperimentalData();
-        ExperimentalData=read.GetExperimentalDataArray();
-//             read.Print2DArray(ExperimentalData);
-    }
+        if(IExperimentalDataFile=="default" ||IExperimentalDataFile=="DEFAULT")
+        {
+            read.SetInputName("ExperimentalData.dat");
+            IExperimentalDataFile="ExperimentalData.dat";
+            read.SetExperimentalData();
+            ExperimentalData=read.GetExperimentalDataArray();
+        }
 
     cout<<"Reading Data Complete!"<<endl;
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
@@ -348,8 +304,8 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
     Efficiency effi;
-    if(efficiency)effi.SetFileName(ECalibrationDataFile);
     if(input)effi.SetFileName(IECalibrationDataFile);
+    if(rootbool)effi.SetRootFile(rootfile);
     effi.SetSourceDataArray(SData);
     effi.SetExperimentalDataArray(ECalData);
     effi.SetSimulationDataArray(SimulationData);
@@ -390,8 +346,8 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
 
         vector<vector<double> > ICS,PhotonFlux;
         Flux flux;
-            if(photonflux)flux.SetFileName(ExperimentalDataFile);
             if(input)flux.SetFileName(IExperimentalDataFile);
+            if(rootbool)flux.SetRootFile(rootfile);
             flux.SetNThread(TNumber);
             flux.SetDetectorAngles(DetectorAngles);
             flux.SetInputData(ExperimentalData);

@@ -561,6 +561,8 @@ void Flux::PlotPhotonFlux()
 
 void Flux::PlotFitParameters()
 {
+    if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
+    RFile->cd("Flux");
     double xlow=TMath::MinElement(NFit,&FitParameterDistribution[0][0]);
     double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[0][0]);
     int numberofdigits=(int)pow(10,fabs(ceil(log10(FitParameterDistribution[0][0]))));
@@ -581,12 +583,15 @@ void Flux::PlotFitParameters()
     ScalingParameter->Fit("Parameter Gaus","Q");
     ScaleParameter.push_back(ScalingParameter->GetMean(1));
     ScaleParameter.push_back(ScalingParameter->GetStdDev(1));
-    
+    ScalingParameter->Write();
+    ParameterFuncGaus->Write();
+
     TCanvas *ParameterHistScale;
     ParameterHistScale = new TCanvas("Scaling Parameter Histogram","Scaling Parameter Distribution",1600,900);
     ParameterHistScale->SetGrid();
     ParameterHistScale->GetFrame()->SetFillColor(21);
     ParameterHistScale->GetFrame()->SetBorderSize(12);
+    ParameterHistScale->Write();
 
     Output out;
     out.SetDate();
@@ -619,40 +624,15 @@ void Flux::PlotFitParameters()
     
 
     //The following calculations are done for 100 bins
-    int rebin=1;
-    const Int_t nq = 1000;
-    TH1I *Endpointq=new TH1I("End-Point", "End-Point Distribution",nq,xlow,xhi);
-    for(unsigned int i=0;i<FitParameterDistribution[1].size();i++)Endpointq->Fill(FitParameterDistribution[1][i]);
-
-    // TF1  *LogNormal_Gamma_Dist=new TF1("LogNormal and Gamma Distribution mixed",Functions::LogNormal_Gamma_Dist,xlow,xhi,8); 
-    // LogNormal_Gamma_Dist->FixParameter(0,1);
-    // LogNormal_Gamma_Dist->FixParameter(1,9);
-    // LogNormal_Gamma_Dist->SetParameter(2,1);
-    // LogNormal_Gamma_Dist->SetParameter(3,1);
-    // LogNormal_Gamma_Dist->SetParameter(4,1);
-    // LogNormal_Gamma_Dist->SetParameter(5,9);
-    // LogNormal_Gamma_Dist->SetParameter(6,1);
-    // LogNormal_Gamma_Dist->SetParameter(7,1);
-    // Endpointq->Fit(LogNormal_Gamma_Dist,"Q");
-    // for(int i=1;i<8;i++)LogNormal_Gamma_Dist->FixParameter(i,LogNormal_Gamma_Dist->GetParameter(i));
-    // LogNormal_Gamma_Dist->ReleaseParameter(0);
-    // Endpointq->Fit(LogNormal_Gamma_Dist,"Q");
-    // for(unsigned int i =0;i<4;i++)ParameterFuncGaus->ReleaseParameter(i);
-    // ParameterFuncGaus->SetParameter(0,1);
-    // ParameterFuncGaus->FixParameter(1,max_x);
-    // ParameterFuncGaus->SetParameter(2,ScalingParameter->GetStdDev(1));
-    // ParameterFuncGaus->SetParameter(3,0);
-    // Endpointq->Fit(ParameterFuncGaus,"Q");
+    int nq=100;
+    TH1I *Endpoint=new TH1I("End-Point", "End-Point Distribution",nq,xlow,xhi);
+    for(unsigned int i=0;i<FitParameterDistribution[1].size();i++)Endpoint->Fill(FitParameterDistribution[1][i]);
 
     Double_t xq[nq];  // position where to compute the quantiles in [0,1]
     Double_t yq[nq];  // array to contain the quantiles
     for (Int_t i=0;i<nq;i++) xq[i] = double (i+1)/nq;
-    Endpointq->GetQuantiles(nq,yq,xq);
-    // for(int i =0;i<nq;i++)cout<<setw(15)<<xq[i]<<setw(15)<<yq[i]<<setw(15)<<" "<<setw(15)<<Endpointq->GetBinContent(i)<<endl;
-    TH1I *Endpoint = dynamic_cast<TH1I*>(Endpointq->Rebin(rebin,"End-Point Distribution"));
-    // ROOT::Math::Interpolator interpolation(nq, ROOT::Math::Interpolation::kLINEAR);
-    // interpolation.SetData(nq,xq,yq);
-    int steps=(int) nq*0.32;
+    Endpoint->GetQuantiles(nq,yq,xq);
+    int steps=(int) nq*32/100;
     int conf_inter=nq-steps;
     int lower_bound;
     double min_range=xhi;
@@ -664,18 +644,13 @@ void Flux::PlotFitParameters()
             lower_bound=i;
         }
     }
-    unsigned int maxbin=Endpointq->GetMaximumBin();
-    double bin_width=Endpointq->GetBinWidth(1);
+    unsigned int maxbin=Endpoint->GetMaximumBin();
+    double bin_width=Endpoint->GetBinWidth(1);
     double max_x=maxbin*bin_width+xlow;    
-    cout<<"maxbin: "<<maxbin<<endl;
     TH1I *intervall= new TH1I("End-Point", "End-Point Distribution",nq,xlow,xhi);
     for(int i =maxbin;i<lower_bound+conf_inter;i++)intervall->SetBinContent(i,Endpoint->GetBinContent(i));
-    for(int i =100;i<maxbin;i++)intervall->SetBinContent(i,Endpoint->GetBinContent(i));
+    for(unsigned int i =100;i<maxbin;i++)intervall->SetBinContent(i,Endpoint->GetBinContent(i));
     intervall->SetFillColor(2);
-
-    // for(int i =0;i<nq;i++)cout<<setw(15)<<i<<setw(15)<<Endpointq->GetBinContent(i)<<endl;
-
-
 
     Endpoint->SetXTitle("Endpoint in MeV");
     EndPointParameter.push_back(max_x);
@@ -689,10 +664,6 @@ void Flux::PlotFitParameters()
     ParameterHistEndpoint->GetFrame()->SetBorderSize(12);
     Endpoint->Draw("same");
     intervall->Draw("same");
-    // ParameterFuncGaus->Draw("same");
-    // TGraph *quantiles_plot = new TGraph(nq,xq,yq);
-    // quantiles_plot->SetMarkerStyle(21);
-    // quantiles_plot->Draw("alp");
 
     str="ParameterPlot_EndPoint_Flux_";
     str.append(FileName);
@@ -704,6 +675,10 @@ void Flux::PlotFitParameters()
     cout<<"Distribution of End-Point saved. ( "<<str<<" )"<<endl;
     
     cout<<setw(15)<<EndPointParameter[0]<<" +"<<EndPointParameter[2]<<" -"<<EndPointParameter[1]<<endl;
+
+    ParameterHistEndpoint->Write();
+    Endpoint->Write();
+    intervall->Write();
 
     delete ParameterFuncGaus;
     delete Endpoint;

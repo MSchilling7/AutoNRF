@@ -35,6 +35,7 @@
 #include <TFitResult.h>
 #include <TFitResultPtr.h>
 #include <TLegend.h>
+#include <TFile.h>
 
 #include <thread> 
 #include <mutex>  
@@ -69,6 +70,7 @@ public:
     /// Copy Constructor for Efficiency
     Efficiency(const Efficiency&)
     {;};
+    void SetRootFile(string rootfile){rfile=rootfile;};
     void SetECalTime(vector<double> Time){ECalTime=Time;};
     void SetDetectorAngles(vector<double> Angles){DetectorAngles=Angles;};
     void SetSourceDataArray(vector<vector<vector<double> > > SData){sData=SData;};
@@ -76,7 +78,7 @@ public:
     void SetSimulationDataArray(vector<vector<vector<double> > > SimData){simulationData=SimData;};
     void SetFitParameterVector(vector<double> par){Parameter=par;}
     void SetFitFunctionEnum(Functions::EFunc a){FitFunctionEnum=a;};
-    void SetFileName(string Name){FileName=Name;FileName.erase(FileName.end()-4,FileName.end());};
+    void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
     void CalculateEfficiency();
     void OrganizeData();
     void FitEfficiency();
@@ -86,7 +88,8 @@ public:
     vector<vector<double> >GetFittedParameters(){return Parameter_All;};
     vector<vector<vector<double> > >  GetEfficiencyDataArray(){return EfficiencyDataArray;};
 private:
-    
+    string rfile = "";
+    TFile* RFile;
     void EfficiencyFitter(unsigned int NFit_thread, unsigned int NDetector, unsigned int NPar);
     TF1* GetEFunction(){return EFunction;}
     vector<vector<vector<double> > >GetSimulationData(){return simulationData;}

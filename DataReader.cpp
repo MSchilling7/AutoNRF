@@ -57,7 +57,7 @@ void DataReader::SetInputParameter()
     Filestream.open(GetFileName(),std::ifstream::in);
     if(Filestream.is_open()){
 //              file opened successfully so we are here
-        cout  <<  "File Opened successfully!!!. Reading Input Parameters from file into arrays"  <<  endl;
+        cout  <<  "File Opened success!!! Reading Input Parameters from file into arrays"  <<  endl;
         int currentline=0;
         while(getline(Filestream,line)){
             if(line[0] != '/' && line[1] != '/'){
@@ -176,7 +176,7 @@ void DataReader::SetSourceData()
     Filestream.open(GetFileName(),std::ifstream::in);
     if(Filestream.is_open()){
 //              file opened successfully so we are here
-        cout  <<  "File Opened successfully!!!. Reading Efficiency Calibration Data from file into array"  <<  endl;
+        cout  <<  "File Opened success!!!y!!!. Reading Efficiency Calibration Data from file into array"  <<  endl;
         while(getline(Filestream,line)){
             if(line[0] != '/' && line[1] != '/'){
                 for(unsigned int i=0; i<line.size() ;i++)
@@ -242,7 +242,7 @@ void DataReader::SetSourceData()
         Filestream.open(GetFileName(),std::ifstream::in);
         if(Filestream.is_open()){
 //              file opened successfully so we are here
-            cout  <<  "File Opened successfully!!!. Reading Photon Flux Calibration Data from file into array"  <<  endl;
+            cout  <<  "File Opened successfully!!! Reading Photon Flux Calibration Data from file into array"  <<  endl;
             while(getline(Filestream,line))
             {
                 if(line[0] != '/' && line[1] != '/')
@@ -310,7 +310,7 @@ void DataReader::SetSourceData()
             Filestream.open(GetFileName(),std::ifstream::in);
             if(Filestream.is_open()){
 //              file opened successfully so we are here
-                cout  <<  "File Opened successfully!!!. Reading Peak Data from file into array"  <<  endl;
+                cout  <<  "File Opened successfully!!! Reading Peak Data from file into array"  <<  endl;
                 while(getline(Filestream,line))
                 {
                     if(line[0] != '/' && line[1] != '/')
@@ -380,7 +380,7 @@ void DataReader::SetSourceData()
                 Filestream.open(GetFileName(),std::ifstream::in);
                 if(Filestream.is_open()){
 //              file opened successfully so we are here
-                    cout  <<  "File Opened successfully!!!. Reading Peak Data from file into array"  <<  endl;
+                    cout  <<  "File Opened successfully!!! Reading Peak Data from file into array"  <<  endl;
                     while(getline(Filestream,line)){
                         if(line[0] != '/' && line[1] != '/'){
                             for(unsigned int i=0; i<line.size() ;i++)
@@ -442,7 +442,7 @@ void DataReader::SetSourceData()
                     Filestream.open(GetFileName(),std::ifstream::in);
                     if(Filestream.is_open()){
 //              file opened successfully so we are here
-                        cout  <<  "File Opened successfully!!!. Reading Simulation Data from file into array"  <<  endl;
+                        cout  <<  "File Opened successfully!!! Reading Simulation Data from file into array"  <<  endl;
                         while(getline(Filestream,line))
                         {
                             if(line[0] != '/' && line[1] != '/')
