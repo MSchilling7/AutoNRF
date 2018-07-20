@@ -40,6 +40,7 @@ int main(int argc, char **argv)
   
   bool input        = false;
   bool rootbool     = false;
+  bool threadbool   = false;
   int c           = 0;
   
   string InputFile;
@@ -80,7 +81,9 @@ int main(int argc, char **argv)
         break;
         
         case 't':
-        TNumber=atoi(optarg);            
+        TNumber=atoi(optarg);
+        rootbool=true;
+        break;            
         
         case 'r':
         rootfile="Output/";
@@ -306,6 +309,8 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     Efficiency effi;
     if(input)effi.SetFileName(IECalibrationDataFile);
     if(rootbool)effi.SetRootFile(rootfile);
+    effi.SetNThread(1);
+    if(threadbool)effi.SetNThread(TNumber);
     effi.SetSourceDataArray(SData);
     effi.SetExperimentalDataArray(ECalData);
     effi.SetSimulationDataArray(SimulationData);

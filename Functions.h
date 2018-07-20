@@ -100,4 +100,35 @@ private:
   double fp[3];  
 };
 
+class EfficiencyFitFunc : public ROOT::Math::IParamFunction { 
+public:
+  void SetParameters(const double* p) { std::copy(p,p+NPar(),fp);}
+  const double* Parameters() const { return fp; }
+  ROOT::Math::IGenFunction* Clone() const { 
+    EfficiencyFitFunc* e = new EfficiencyFitFunc(); 
+    e->SetParameters(fp);
+    return e;
+  };
+  unsigned int NPar() const { return 6; }
+private:
+  double DoEvalPar(double energy, const double* par) const
+  { 
+    double energy0=1000;
+    return
+    par[0]*
+      exp(
+      (
+        par[1]*pow(log(energy/energy0),0)+
+        par[2]*pow(log(energy/energy0),1)+
+        par[3]*pow(log(energy/energy0),2)+
+        par[4]*pow(log(energy/energy0),3)+
+        par[5]*pow(log(energy/energy0),4)
+      )
+    ) 
+    ;
+
+  }
+  double fp[6];  
+};
+
 #endif

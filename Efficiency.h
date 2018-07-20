@@ -78,6 +78,7 @@ public:
     void SetSimulationDataArray(vector<vector<vector<double> > > SimData){simulationData=SimData;};
     void SetFitParameterVector(vector<double> par){Parameter=par;}
     void SetFitFunctionEnum(Functions::EFunc a){FitFunctionEnum=a;};
+    void SetNThread(unsigned int t){NThread=t;};
     void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
     void CalculateEfficiency();
     void OrganizeData();
@@ -88,9 +89,21 @@ public:
     vector<vector<double> >GetFittedParameters(){return Parameter_All;};
     vector<vector<vector<double> > >  GetEfficiencyDataArray(){return EfficiencyDataArray;};
 private:
+
+    //! Storing the threads:
+    vector<TThread*> Threads;
+    //! Storing a flag that the thread is running
+    vector<bool> ThreadIsInitialized;
+    //! Storing a flag that the thread is finished
+    vector<bool> ThreadIsFinished;
+    static void CallParallelEfficiencyFitThread(void* Adress);
+
+
     string rfile = "";
     TFile* RFile;
-    void EfficiencyFitter(unsigned int NFit_thread, unsigned int NDetector, unsigned int NPar);
+    unsigned int NDetector;
+    bool EfficiencyFitter(unsigned int NThread);
+    unsigned int NThread;
     TF1* GetEFunction(){return EFunction;}
     vector<vector<vector<double> > >GetSimulationData(){return simulationData;}
     unsigned int NumberofParameters, NFit;
@@ -110,5 +123,24 @@ private:
     vector<vector<vector<double> > > EfficiencyDataArray;
     
 };
+class ThreadCallerEfficiency
+{
+ public:
+  //! Standard constructor
+  ThreadCallerEfficiency(Efficiency* M, unsigned int ThreadID) {
+    m_Fitter = M;
+    m_ThreadID = ThreadID;
+  }
 
+  //! Return the calling class
+  Efficiency* GetThreadCaller() { return m_Fitter; }
+  //! Return the thread ID
+  unsigned int GetThreadID() { return m_ThreadID; }
+
+ private:
+  //! Store the calling class for retrieval
+  Efficiency* m_Fitter;
+  //! ID of the worker thread
+  unsigned int m_ThreadID;
+};
 #endif
