@@ -561,8 +561,8 @@ void Flux::PlotPhotonFlux()
 
 void Flux::PlotFitParameters()
 {
-    if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
-    RFile->cd("Flux");
+    // if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
+    // RFile->cd("Flux");
     double xlow=TMath::MinElement(NFit,&FitParameterDistribution[0][0]);
     double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[0][0]);
     int numberofdigits=(int)pow(10,fabs(ceil(log10(FitParameterDistribution[0][0]))));
@@ -583,15 +583,15 @@ void Flux::PlotFitParameters()
     ScalingParameter->Fit("Parameter Gaus","Q");
     ScaleParameter.push_back(ScalingParameter->GetMean(1));
     ScaleParameter.push_back(ScalingParameter->GetStdDev(1));
-    ScalingParameter->Write();
-    ParameterFuncGaus->Write();
+    // ScalingParameter->Write();
+    // ParameterFuncGaus->Write();
 
     TCanvas *ParameterHistScale;
     ParameterHistScale = new TCanvas("Scaling Parameter Histogram","Scaling Parameter Distribution",1600,900);
     ParameterHistScale->SetGrid();
     ParameterHistScale->GetFrame()->SetFillColor(21);
     ParameterHistScale->GetFrame()->SetBorderSize(12);
-    ParameterHistScale->Write();
+    // ParameterHistScale->Write();
 
     Output out;
     out.SetDate();
@@ -676,9 +676,9 @@ void Flux::PlotFitParameters()
     
     cout<<setw(15)<<EndPointParameter[0]<<" +"<<EndPointParameter[2]<<" -"<<EndPointParameter[1]<<endl;
 
-    ParameterHistEndpoint->Write();
-    Endpoint->Write();
-    intervall->Write();
+    // ParameterHistEndpoint->Write();
+    // Endpoint->Write();
+    // intervall->Write();
 
     delete ParameterFuncGaus;
     delete Endpoint;

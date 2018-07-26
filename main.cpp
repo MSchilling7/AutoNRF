@@ -82,7 +82,7 @@ int main(int argc, char **argv)
         
         case 't':
         TNumber=atoi(optarg);
-        rootbool=true;
+        threadbool=true;
         break;            
         
         case 'r':
@@ -147,15 +147,14 @@ vector<Functions::EFunc> FitFunctionArray;
 vector<vector<double> > FitParameterArray_Efficency,FitParameterArray_Flux;
 vector<double> DetectorAngles;
 vector<double> ECalTime;
+    if(!threadbool)TNumber=1;
+    if(!rootbool)rootfile="Output/default.root";
 
-if(rootbool)
-{
-    TFile* RFile = TFile::Open(rootfile.c_str(),"RECREATE");
-    RFile->mkdir("Efficiency","Efficiency");
-    RFile->mkdir("Flux","Flux");
-    RFile->Write();
-    RFile->Close();
-}
+    // TFile* RFile = TFile::Open(rootfile.c_str(),"RECREATE");
+    // RFile->mkdir("Efficiency","Efficiency");
+    // RFile->mkdir("Flux","Flux");
+    // RFile->Write();
+    // RFile->Close();
 
 DataReader read;
 if(input)
@@ -307,15 +306,13 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
     Efficiency effi;
-    if(input)effi.SetFileName(IECalibrationDataFile);
-    if(rootbool)effi.SetRootFile(rootfile);
-    effi.SetNThread(1);
-    if(threadbool)effi.SetNThread(TNumber);
+    effi.SetFileName(IECalibrationDataFile);
+    effi.SetRootFile(rootfile);
+    effi.SetNThread(TNumber);
     effi.SetSourceDataArray(SData);
     effi.SetExperimentalDataArray(ECalData);
     effi.SetSimulationDataArray(SimulationData);
     effi.SetFitParameterVector(Parameter_Efficency);
-    effi.SetFitFunctionEnum(FunctionEnum);
     effi.SetECalTime(ECalTime);
     effi.SetDetectorAngles(DetectorAngles);
     effi.OrganizeData();
@@ -351,8 +348,8 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
 
         vector<vector<double> > ICS,PhotonFlux;
         Flux flux;
-            if(input)flux.SetFileName(IExperimentalDataFile);
-            if(rootbool)flux.SetRootFile(rootfile);
+            flux.SetFileName(IExperimentalDataFile);
+            flux.SetRootFile(rootfile);
             flux.SetNThread(TNumber);
             flux.SetDetectorAngles(DetectorAngles);
             flux.SetInputData(ExperimentalData);

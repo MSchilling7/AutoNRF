@@ -68,7 +68,23 @@ public:
     ~Efficiency();
     
     /// Copy Constructor for Efficiency
-    Efficiency(const Efficiency&)
+    Efficiency(const Efficiency&):
+    rfile(""),
+    FileName(""),
+    NumberOfThreads(0),
+    NumberofParameters(0),
+    NFit(0),
+    FitParameterMean(0),
+    FitParameterSigma(0),
+    Parameter(),
+    FitParameterDistribution(),
+    Parameter_All(),
+    ECalTime(),
+    DetectorAngles(),
+    sData(),
+    ecalData(),
+    simulationData(),
+    EfficiencyDataArray()
     {;};
     void SetRootFile(string rootfile){rfile=rootfile;};
     void SetECalTime(vector<double> Time){ECalTime=Time;};
@@ -77,8 +93,7 @@ public:
     void SetExperimentalDataArray(vector<vector<vector<double> > >  ECalData){ecalData=ECalData;};
     void SetSimulationDataArray(vector<vector<vector<double> > > SimData){simulationData=SimData;};
     void SetFitParameterVector(vector<double> par){Parameter=par;}
-    void SetFitFunctionEnum(Functions::EFunc a){FitFunctionEnum=a;};
-    void SetNThread(unsigned int t){NThread=t;};
+    void SetNThread(unsigned int t){NumberOfThreads=t;};
     void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
     void CalculateEfficiency();
     void OrganizeData();
@@ -98,23 +113,16 @@ private:
     vector<bool> ThreadIsFinished;
     static void CallParallelEfficiencyFitThread(void* Adress);
 
-
-    string rfile = "";
-    TFile* RFile;
-    unsigned int NDetector;
     bool EfficiencyFitter(unsigned int NThread);
-    unsigned int NThread;
-    TF1* GetEFunction(){return EFunction;}
-    vector<vector<vector<double> > >GetSimulationData(){return simulationData;}
-    unsigned int NumberofParameters, NFit;
-    Functions::EFunc FitFunctionEnum;
-    string Type;
+
+    string rfile;
     string FileName;
-    TF1 *EFunction;
-    TF1 *dupefficiencyfunc,*ddownefficiencyfunc;
-    vector<double> Parameter;
+    unsigned int NumberOfThreads;
+    unsigned int NumberofParameters;
+    unsigned int NFit;
     double FitParameterMean;
     double FitParameterSigma;
+    vector<double> Parameter;
     vector<vector<double> >FitParameterDistribution,Parameter_All;
     vector<double> ECalTime,DetectorAngles;
     vector<vector<vector<double> > > sData;

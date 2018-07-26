@@ -14,9 +14,25 @@ using std::istringstream;
 using std::getline;
 
 
-Efficiency::Efficiency()
+Efficiency::Efficiency():
+    rfile(""),
+    FileName(""),
+    NumberOfThreads(0),
+    NumberofParameters(0),
+    NFit(0),
+    FitParameterMean(0),
+    FitParameterSigma(0),
+    Parameter(),
+    FitParameterDistribution(),
+    Parameter_All(),
+    ECalTime(),
+    DetectorAngles(),
+    sData(),
+    ecalData(),
+    simulationData(),
+    EfficiencyDataArray()
 {
-
+    NumberofParameters=6;
 };
 
 // ---------------------------------------------------------
@@ -29,6 +45,7 @@ Efficiency::~Efficiency()
 
 void Efficiency::CalculateEfficiency()
 {
+    if(sData.size()==1)for(unsigned int i=0;i<ECalTime.size();i++)sData.push_back(sData[0]);
     DataReader read;
     Functions func;
     vector<int>sortinglist;
@@ -57,76 +74,91 @@ void Efficiency::CalculateEfficiency()
 
 void Efficiency::OrganizeData()
 {
-    if(sData.size()==1)for(unsigned int i=0;i<ECalTime.size();i++)sData.push_back(sData[0]);
-    FitParameterDistribution.resize(ECalTime.size());
-    NFit=(unsigned int) Parameter[0];
-    string str;
-    str.append(std::to_string(SIGMA));
-    str.append("-#sigma-range");
-    if(FitFunctionEnum == Functions::EFunc::Knoll)
-    {
-        Type="Knoll";
-        NumberofParameters = 6;
-        EFunction = new TF1("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
-        if(ERRORBARS)dupefficiencyfunc=new TF1(str.c_str(),Functions::knoll, 0, 10000,NumberofParameters);
-        if(ERRORBARS)ddownefficiencyfunc=new TF1(str.c_str(),Functions::knoll, 0, 10000,NumberofParameters);
-    }
-//     if(FitFunctionEnum == Functions::EFunc::a4)
-//     {
-//         Type="a4";
-//         NumberofParameters = 5;
-//         Fit = new TF1("Fit",Functions::a4, 0, 10000,NumberofParameters);
-//         if(ERRORBARS)dupefficiencyfunc=new TF1(str.c_str(),Functions::a4, 0, 10000,NumberofParameters);
-//         if(ERRORBARS)ddownefficiencyfunc=new TF1(str.c_str(),Functions::a4, 0, 10000,NumberofParameters);
-//     }
-//     if(FitFunctionEnum == Functions::EFunc::Jaeckel)
-//     {
-//         Type="Jäckel";
-//         
-//         NumberofParameters = 7;
-//         Fit = new TF1("Fit",Functions::jaeckel, 0, 10000,NumberofParameters);
-//         if(ERRORBARS)dupefficiencyfunc=new TF1(str.c_str(),Functions::jaeckel, 0, 10000,NumberofParameters);
-//         if(ERRORBARS)ddownefficiencyfunc=new TF1(str.c_str(),Functions::jaeckel, 0, 10000,NumberofParameters);
-//     }
-    Parameter.erase(Parameter.begin());
-    Parameter_All.resize(ECalTime.size());
-    for(unsigned int i=0;i<Parameter_All.size();i++)Parameter_All[i].resize(NumberofParameters);
+
 }
 
 // ---------------------------------------------------------
 
 void Efficiency::FitEfficiency()
-{   
+{
+    NFit=(unsigned int) Parameter[0];
+    Parameter.erase(Parameter.begin());
+    FitParameterDistribution.resize(DetectorAngles.size());
+    for(unsigned int i=0;i<FitParameterDistribution.size();i++)FitParameterDistribution[i].resize(NFit);
+    Parameter_All.resize(DetectorAngles.size());
+    for(unsigned int i=0;i<Parameter_All.size();i++)Parameter_All[i].resize(NumberofParameters);   
     cout<<"Fitting Detector Efficiency..."<<endl;
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
-        NDetector=t;
-        for(unsigned int i = 0 ; i<NumberofParameters;i++){EFunction->ReleaseParameter(i);};
-        for(unsigned int i = 0 ; i<NumberofParameters;i++){EFunction->SetParameter(i,Parameter[i]);};
+        TF1 EFunction("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
+        for(unsigned int i = 0 ; i<NumberofParameters;i++){EFunction.ReleaseParameter(i);};
+        for(unsigned int i = 0 ; i<NumberofParameters;i++){EFunction.SetParameter(i,Parameter[i]);};
         int datapoints_sim=(int) simulationData[t].size();
         Double_t xvec_sim[datapoints_sim];
         Double_t yvec_sim[datapoints_sim];
-        for(unsigned int i = 0;i<simulationData[NDetector].size();i++)
+        for(unsigned int i = 0;i<simulationData[t].size();i++)
         {
-            xvec_sim[i]=simulationData[NDetector][i][0];
-            yvec_sim[i]=simulationData[NDetector][i][1];
+            xvec_sim[i]=simulationData[t][i][0];
+            yvec_sim[i]=simulationData[t][i][1];
         }
-        TGraphErrors *DataGraph;
-        DataGraph= new TGraphErrors((const Int_t)datapoints_sim,xvec_sim,yvec_sim,0,0);
-        EFunction->FixParameter(0,Parameter[0]);//Fixing Scale
-        DataGraph->Fit(EFunction,"Q");
-        for(unsigned int i=1;i<NumberofParameters;i++)
+        TGraphErrors DataGraph((const Int_t)datapoints_sim,xvec_sim,yvec_sim,0,0);
+        EFunction.FixParameter(0,Parameter[0]);//Fixing Scale
+        DataGraph.Fit(&EFunction,"Q");
+        for(unsigned int i=0;i<NumberofParameters;i++)
         {
-            Parameter_All[t][i]=EFunction->GetParameter(i);
-            EFunction->FixParameter(i,Parameter_All[NDetector][i]);
+            Parameter_All[t][i]=EFunction.GetParameter(i);
         }
-        delete DataGraph;
-        
-
-        cout<<"Fitting Efficiency Function for the Detector under "<<(int)DetectorAngles[t]<<" deg..."<<endl;
-        EfficiencyFitter(NFit);
-
     }
+    Threads.resize(NumberOfThreads);
+    for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsFinished.push_back(false);
+    for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsInitialized.push_back(false);
+    if (NumberOfThreads > 1)
+    {
+            // Start threads
+        for (unsigned int t = 0; t < NumberOfThreads; ++t)
+        {
+            TString Name = "Thread ";
+            Name += t;
+            // cout<<"Creating thread: "<<Name<<endl;
+            TThread* Thread = new TThread(Name, (void(*) (void *)) &CallParallelEfficiencyFitThread, (void*) new ThreadCallerEfficiency(this, t));
+            Threads[t] = Thread;
+            Thread->Run();
+            // Wait until thread is initialized:
+            while (ThreadIsInitialized[t] == false && ThreadIsFinished[t] == false)
+            {
+                // Sleep for a while...
+                TThread::Sleep(0, 10000000);
+            }    
+            cout<<Name<<" is running"<<endl;
+        }
+            bool ThreadsAreRunning = true;
+        while (ThreadsAreRunning == true)
+        {
+            // Sleep for a while...
+            TThread::Sleep(0, 10000000);
+            ThreadsAreRunning = false;
+            for (unsigned int t = 0; t < NumberOfThreads; ++t)
+            {
+                if(ThreadIsFinished[t] == false)
+                {
+                    ThreadsAreRunning = true;
+                    break;
+                }
+            }
+        }
+        // None of the threads are running any more --- kill them
+        for (unsigned int t = 0; t < NumberOfThreads; ++t)
+        {
+            Threads[t]->Kill();
+            Threads[t] = 0;
+        }
+    }
+    // Non-threaded mode
+    else
+    {
+        EfficiencyFitter(0);
+    }        
+
     cout<<"Detector Efficiency fitted. Check log files!"<<endl;
 }
 
@@ -163,82 +195,81 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
 
     vector<vector<vector<double> > >Data;
     vector<double>Part;
-    TF1* EFunction_Thread;
+    TF1 EFunction("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
     vector<vector<double> >Par;
-    EFunction_Thread=GetEFunction();
     Data=GetEfficiencyDataArray();
     Par=GetFittedParameters();
 
-
-    for(unsigned int i = 0 ; i<NumberofParameters;i++){EFunction_Thread->ReleaseParameter(i);};
-    for(unsigned int i = 0 ; i<NumberofParameters;i++)EFunction_Thread->FixParameter(i,Par[NDetector][i]);
-    EFunction_Thread->ReleaseParameter(0);
-
-    int datapoints_ecal=(int)Data[NDetector].size();
-    Double_t xvec_ecal[datapoints_ecal];
-    Double_t yvec_ecal[datapoints_ecal];
-
-    TRandom3* rand =new TRandom3(0);
-
-    ROOT::Fit::Fitter TheFitter;
-    TheFitter.Config().SetMinimizer("GSLMultiFit");
-    // TheFitter.Config().SetMinimizer("Minuit2","Combined");
-    TheFitter.SetFunction(FitFunction);
-    TheFitter.Config().MinimizerOptions().SetPrintLevel(0);
-    for(unsigned int i=0;i<NFit;i++)
+    for(unsigned int NDetector=0;NDetector<DetectorAngles.size();NDetector++)
     {
-
-        for(unsigned int j=0;j<Data[NDetector].size();j++)
+        for(unsigned int i = 0 ; i<NumberofParameters;i++){EFunction.ReleaseParameter(i);};
+        for(unsigned int i = 0 ; i<NumberofParameters;i++)EFunction.FixParameter(i,Par[NDetector][i]);
+        EFunction.ReleaseParameter(0);
+    
+        int datapoints_ecal=(int)Data[NDetector].size();
+        Double_t xvec_ecal[datapoints_ecal];
+        Double_t yvec_ecal[datapoints_ecal];
+    
+        TRandom3 random(0);
+    
+        ROOT::Fit::Fitter TheFitter;
+        // TheFitter.Config().SetMinimizer("GSLMultiFit");
+        TheFitter.Config().SetMinimizer("Minuit2","Combined");
+        TheFitter.SetFunction(FitFunction);
+        TheFitter.Config().MinimizerOptions().SetPrintLevel(0);
+        for(unsigned int i=0;i<NFit/NumberOfThreads;i++)
         {
-            xvec_ecal[j]=rand->Gaus(Data[NDetector][j][0],Data[NDetector][j][1]);
-            yvec_ecal[j]=rand->Gaus(Data[NDetector][j][2],Data[NDetector][j][3]);
-        }
-        TGraph* DataGraph=new TGraph((const Int_t)datapoints_ecal,xvec_ecal,yvec_ecal);
-        for(unsigned int j=1;j<11;j++)
-        {
-            if(j*NFit/10==i+1 && percent[j]==false)
+    
+            for(unsigned int j=0;j<Data[NDetector].size();j++)
             {
-                cout<<"Thread "<<NThread<<": ["<<equal.substr(0,j)<<space.substr(j,10)<<"] "<< j <<"0%"<<endl;
-                percent[j]=true;
+                xvec_ecal[j]=random.Gaus(Data[NDetector][j][0],Data[NDetector][j][1]);
+                yvec_ecal[j]=random.Gaus(Data[NDetector][j][2],Data[NDetector][j][3]);
             }
+            TGraph DataGraph((const Int_t)datapoints_ecal,xvec_ecal,yvec_ecal);
+            TThread::Lock();
+            unsigned int ID = i;
+            TThread::UnLock();
+            for(unsigned int j=1;j<11;j++)
+            {
+                if(j*NFit/10/NumberOfThreads==ID+1 && percent[j]==false)
+                {
+                    cout<<"Thread "<<NThread<<": ["<<equal.substr(0,j)<<space.substr(j,10)<<"] "<< j <<"0%"<<endl;
+                    percent[j]=true;
+                }
+            }
+    
+    
+            ROOT::Fit::BinData d;
+            ROOT::Fit::FillData(d,&DataGraph); 
+            TheFitter.Config().ParSettings(0).SetName("Scale");
+            TheFitter.Config().ParSettings(0).SetValue(Par[NDetector][0]);
+            TheFitter.Config().ParSettings(1).SetName("a0");
+            TheFitter.Config().ParSettings(1).SetValue(Par[NDetector][1]);
+            TheFitter.Config().ParSettings(1).Fix();
+            TheFitter.Config().ParSettings(2).SetName("a1");
+            TheFitter.Config().ParSettings(2).SetValue(Par[NDetector][2]);
+            TheFitter.Config().ParSettings(2).Fix();
+            TheFitter.Config().ParSettings(3).SetName("a2");
+            TheFitter.Config().ParSettings(3).SetValue(Par[NDetector][3]);
+            TheFitter.Config().ParSettings(3).Fix();
+            TheFitter.Config().ParSettings(4).SetName("a3");
+            TheFitter.Config().ParSettings(4).SetValue(Par[NDetector][4]);
+            TheFitter.Config().ParSettings(4).Fix();
+            TheFitter.Config().ParSettings(5).SetName("a4");
+            TheFitter.Config().ParSettings(5).SetValue(Par[NDetector][5]);
+            
+            bool ReturnCode = false;
+            ReturnCode = TheFitter.Fit(d);
+            if(ReturnCode == true)
+            {
+                Scale = TheFitter.Result().Parameter(0);
+                // TThread::Printf("Thread %i: Results E0= %.5f     Scale= %.5f    Nr: %i", NThread, E0,Scale,ID);
+                // TThread::Printf("Thread %i: ID=%i     i=%i",NThread,ID,ID+NFit/NumberOfThreads*NThread);
+            }
+            TThread::Lock();
+                FitParameterDistribution[NDetector][ID+NFit/NumberOfThreads*NThread]=Scale;
+            TThread::UnLock();
         }
-
-        TThread::Lock();
-        unsigned int ID = i;
-        // cout<<i<<endl;
-        TThread::UnLock();
-
-        ROOT::Fit::BinData d;
-        ROOT::Fit::FillData(d,DataGraph); 
-        TheFitter.Config().ParSettings(0).SetName("Scale");
-        TheFitter.Config().ParSettings(0).SetValue(Par[NDetector][0]);
-        TheFitter.Config().ParSettings(1).SetName("a0");
-        TheFitter.Config().ParSettings(1).SetValue(Par[NDetector][1]);
-        TheFitter.Config().ParSettings(1).Fix();
-        TheFitter.Config().ParSettings(2).SetName("a1");
-        TheFitter.Config().ParSettings(2).SetValue(Par[NDetector][2]);
-        TheFitter.Config().ParSettings(2).Fix();
-        TheFitter.Config().ParSettings(3).SetName("a2");
-        TheFitter.Config().ParSettings(3).SetValue(Par[NDetector][3]);
-        TheFitter.Config().ParSettings(3).Fix();
-        TheFitter.Config().ParSettings(4).SetName("a3");
-        TheFitter.Config().ParSettings(4).SetValue(Par[NDetector][4]);
-        TheFitter.Config().ParSettings(4).Fix();
-        TheFitter.Config().ParSettings(5).SetName("a4");
-        TheFitter.Config().ParSettings(5).SetValue(Par[NDetector][5]);
-        
-        bool ReturnCode = false;
-        ReturnCode = TheFitter.Fit(d);
-        if(ReturnCode == true)
-        {
-            Scale = TheFitter.Result().Parameter(0);
-            // TThread::Printf("Thread %i: Results E0= %.5f     Scale= %.5f    Nr: %i", NThread, E0,Scale,ID);
-            // TThread::Printf("Thread %i: ID=%i     i=%i",NThread,ID,ID+NumberOfFits*NThread);
-        }
-        TThread::Lock();
-            FitParameterDistribution[0][ID+NFit*NThread]=Scale;
-            delete DataGraph;
-        TThread::UnLock();
     }
     ThreadIsFinished[NThread]=true;
     return true;
@@ -249,8 +280,8 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
 
     void Efficiency::PlotScaleDist()
     {
-        if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
-        RFile->cd("Efficiency");
+        // if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
+        // RFile->cd("Efficiency");
 
         for(unsigned int t=0;t<ECalTime.size();t++)
         {
@@ -302,23 +333,25 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             str="Output/"+str;
             ParameterHist->SaveAs(str.c_str());
             cout<<"Distribution of Scale saved. ( "<<str<<" )"<<endl;
-            RFile->Write();
-            ParameterHist->Write();
+            // RFile->Write();
+            // ParameterHist->Write();
 
             Parameter_All[t][0]=FitParameterMean;
             Parameter_All[t].push_back(FitParameterSigma);
             delete ParameterHist;
             delete ScalingParameter;
         }
-        RFile->Close();
+        // RFile->Close();
     }
 // ---------------------------------------------------------
 
     void Efficiency::PlotEFunc()
     {
-        if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
-        RFile->cd("Efficiency");
-
+        // if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
+        // RFile->cd("Efficiency");
+        TF1 EFunction("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
+        TF1 EFunctionUP("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
+        TF1 EFunctionDOWN("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
         for(unsigned int t=0;t<ECalTime.size();t++)
         {
 
@@ -391,53 +424,51 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             names="Efficiency Function ";
             names+=std::to_string((int)DetectorAngles[t]);
 
-            EFunction->SetParameter(0,Parameter_All[t][0]);
+            EFunction.SetParameter(0,Parameter_All[t][0]);
             for(unsigned int i=2;i<NumberofParameters+1;i++)
             {
-                EFunction->SetParameter(i,Parameter_All[t][i]);
+                EFunction.SetParameter(i,Parameter_All[t][i]);
             }
-            EFunction->SetLineWidth(1);
-            EFunction->SetLineColor(COLOR_FIT);
-            EFunction->SetName(names.c_str());
-            EFunction->SetName(names.c_str());
+            EFunction.SetLineWidth(1);
+            EFunction.SetLineColor(COLOR_FIT);
+            EFunction.SetName(names.c_str());
+            EFunction.SetName(names.c_str());
         
             if(ERRORBARS)
             {
-                dupefficiencyfunc->SetParameter(0,Parameter_All[t][0]+SIGMA*FitParameterSigma);
-                ddownefficiencyfunc->SetParameter(0,Parameter_All[t][0]-SIGMA*FitParameterSigma);
+                EFunctionUP.SetParameter(0,Parameter_All[t][0]+SIGMA*FitParameterSigma);
+                EFunctionDOWN.SetParameter(0,Parameter_All[t][0]-SIGMA*FitParameterSigma);
                 for(unsigned int i=1;i<NumberofParameters;i++)
                 {
-                    dupefficiencyfunc->SetParameter(i,Parameter_All[t][i]);
-                    ddownefficiencyfunc->SetParameter(i,Parameter_All[t][i]);
+                    EFunctionUP.SetParameter(i,Parameter_All[t][i]);
+                    EFunctionDOWN.SetParameter(i,Parameter_All[t][i]);
                 }
-                dupefficiencyfunc->SetLineColor(COLOR_DFIT);
-                dupefficiencyfunc->SetLineStyle(7);
-                dupefficiencyfunc->SetLineWidth(1);
-                ddownefficiencyfunc->SetLineColor(COLOR_DFIT);
-                ddownefficiencyfunc->SetLineStyle(7);
-                ddownefficiencyfunc->SetLineWidth(1);
+                EFunctionUP.SetLineColor(COLOR_DFIT);
+                EFunctionUP.SetLineStyle(7);
+                EFunctionUP.SetLineWidth(1);
+                EFunctionDOWN.SetLineColor(COLOR_DFIT);
+                EFunctionDOWN.SetLineStyle(7);
+                EFunctionDOWN.SetLineWidth(1);
             } 
 
         TMultiGraph *mg = new TMultiGraph();
         mg->Add(efficiencysim);
         mg->Add(efficiencydata);
-        string title="Efficiency fitted via ";
-        title.append(Type);
-        title.append("-Model ");
+        string title="Efficiency fitted via Knoll-Model";
         title.append(std::to_string((int) DetectorAngles[t]));
         title.append(" deg;Energy in keV;Efficiency in a.u.;");
         mg->SetTitle(title.c_str());
         mg->Draw("AP");
         
-        EFunction->Draw("same");
-        if(ERRORBARS)dupefficiencyfunc->Draw("same");
-        if(ERRORBARS)ddownefficiencyfunc->Draw("same");
+        EFunction.Draw("same");
+        if(ERRORBARS)EFunctionUP.Draw("same");
+        if(ERRORBARS)EFunctionDOWN.Draw("same");
         TLegend *legend;
         legend=new TLegend(0.7,0.5,0.9,0.9);
-        legend->AddEntry(EFunction,EFunction->GetName(),"l");
+        legend->AddEntry(&EFunction,EFunction.GetName(),"l");
         legend->AddEntry(efficiencydata,efficiencydata->GetName(),"l");
         legend->AddEntry(efficiencysim,efficiencysim->GetName(),"l");
-        if(ERRORBARS)legend->AddEntry(dupefficiencyfunc,dupefficiencyfunc->GetName(),"l");
+        if(ERRORBARS)legend->AddEntry(&EFunctionUP,EFunctionUP.GetName(),"l");
         legend->Draw();
         
 
@@ -453,15 +484,15 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         str="Output/"+str;
         efficiencyplot->SaveAs(str.c_str());
         cout<<"Efficiency of Detector under "<<(int)DetectorAngles[t]<< "deg saved. ( "<<str<<" )"<<endl;
-        efficiencyplot->Write();
-        EFunction->Write();
-        efficiencydata->Write();
-        efficiencysim->Write();
+        // efficiencyplot->Write();
+        // EFunction.Write();
+        // efficiencydata->Write();
+        // efficiencysim->Write();
 
 
         delete efficiencyplot;
         Parameter_All[t].insert(Parameter_All[t].begin()+1,1,Parameter_All[t][NumberofParameters]);
         Parameter_All[t].pop_back();
     }
-    RFile->Close();
+    // RFile->Close();
 }
