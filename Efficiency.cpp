@@ -280,11 +280,15 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
 
     void Efficiency::PlotScaleDist()
     {
-        // if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
-        // RFile->cd("Efficiency");
+        TFile* RFile=TFile::Open(rfile.c_str(),"update");
+        RFile->cd("Efficiency");
 
-        for(unsigned int t=0;t<ECalTime.size();t++)
+        for(unsigned int t=0;t<DetectorAngles.size();t++)
         {
+            string dirname="Detector ";
+            // dirname.append(std::to_string(DetectorAngles[t]));
+            // RFile->mkdir(dirname.c_str());
+            // RFile->cd(dirname.c_str());
             double xlow=TMath::MinElement(NFit,&FitParameterDistribution[t][0]);
             double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[t][0]);
 
@@ -297,32 +301,31 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             xhi=ceil(xhi);
             xhi=xhi/numberofdigits;
 
-            TCanvas *ParameterHist;
             string names="Scaling Parameter Histogram ";
             string title="Scaling Parameter Distribution ";
             title+=std::to_string((int)DetectorAngles[t]);
             names+=std::to_string((int)DetectorAngles[t]);
 
-            ParameterHist = new TCanvas(names.c_str(),title.c_str(),1600,900);
-            ParameterHist->SetGrid();
-            ParameterHist->GetFrame()->SetFillColor(21);
-            ParameterHist->GetFrame()->SetBorderSize(12);
+            TCanvas ParameterHist(names.c_str(),title.c_str(),1600,900);
+            ParameterHist.SetGrid();
+            ParameterHist.GetFrame()->SetFillColor(21);
+            ParameterHist.GetFrame()->SetBorderSize(12);
 
             
-            TH1I *ScalingParameter=new TH1I(names.c_str(),title.c_str(),100,xlow,xhi);
-            for(unsigned int i=0;i<FitParameterDistribution[t].size();i++)ScalingParameter->Fill(FitParameterDistribution[t][i]);
-            TF1* ParameterFuncGaus= new TF1("Parameter Gaus","[0]*1/(sqrt(2*TMath::Pi()*[2]**2))*exp(-0.5*((x-[1])/[2])**2)",xlow,xhi);
-            ParameterFuncGaus->FixParameter(1,ScalingParameter->GetMean(1));
-            ParameterFuncGaus->FixParameter(2,ScalingParameter->GetStdDev(1));
-            ScalingParameter->Fit(ParameterFuncGaus,"Q");
-            FitParameterMean=ScalingParameter->GetMean(1);
-            FitParameterSigma=ScalingParameter->GetStdDev(1);
+            TH1I ScalingParameter(names.c_str(),title.c_str(),100,xlow,xhi);
+            for(unsigned int i=0;i<FitParameterDistribution[t].size();i++)ScalingParameter.Fill(FitParameterDistribution[t][i]);
+            TF1 ParameterFuncGaus("Parameter Gaus","[0]*1/(sqrt(2*TMath::Pi()*[2]**2))*exp(-0.5*((x-[1])/[2])**2)",xlow,xhi);
+            ParameterFuncGaus.FixParameter(1,ScalingParameter.GetMean(1));
+            ParameterFuncGaus.FixParameter(2,ScalingParameter.GetStdDev(1));
+            ScalingParameter.Fit(&ParameterFuncGaus,"Q");
+            FitParameterMean=ScalingParameter.GetMean(1);
+            FitParameterSigma=ScalingParameter.GetStdDev(1);
 
 
             Output out;
             out.SetDate();
-            ScalingParameter->Draw("same");
-            ParameterFuncGaus->Draw("same");
+            ScalingParameter.Draw("same");
+            ParameterFuncGaus.Draw("same");
             string str="ParameterPlot_Scale";
             str.append(FileName);
             str.append("_");
@@ -331,31 +334,29 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             str.append(out.GetDate());
             str.append(".pdf");
             str="Output/"+str;
-            ParameterHist->SaveAs(str.c_str());
+            ParameterHist.SaveAs(str.c_str());
             cout<<"Distribution of Scale saved. ( "<<str<<" )"<<endl;
-            // RFile->Write();
-            // ParameterHist->Write();
+            ParameterHist.Write();
 
             Parameter_All[t][0]=FitParameterMean;
             Parameter_All[t].push_back(FitParameterSigma);
-            delete ParameterHist;
-            delete ScalingParameter;
         }
-        // RFile->Close();
+        RFile->Write();
+        RFile->Close();
     }
 // ---------------------------------------------------------
 
     void Efficiency::PlotEFunc()
     {
-        // if(!rfile.empty())RFile=TFile::Open(rfile.c_str(),"update");
-        // RFile->cd("Efficiency");
+        TFile* RFile=TFile::Open(rfile.c_str(),"update");
+        RFile->cd("Efficiency");
+
         TF1 EFunction("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
         TF1 EFunctionUP("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
         TF1 EFunctionDOWN("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
         for(unsigned int t=0;t<ECalTime.size();t++)
         {
 
-            TGraphErrors *efficiencydata,*efficiencysim;
             int datapoints_ecal=(int) EfficiencyDataArray[t].size();
             int datapoints_sim=(int) simulationData[t].size();
             Double_t xvec_ecal[datapoints_ecal];
@@ -385,47 +386,45 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
 
             string names="Efficiency Data Plot ";
             names+=std::to_string((int)DetectorAngles[t]);
-            TCanvas *efficiencyplot;
-            efficiencyplot = new TCanvas(names.c_str(),names.c_str(),1600,900);
-            efficiencyplot->SetGrid();
-            efficiencyplot->GetFrame()->SetFillColor(21);
-            efficiencyplot->GetFrame()->SetBorderSize(12);
+            TCanvas efficiencyplot(names.c_str(),names.c_str(),1600,900);
+            efficiencyplot.SetGrid();
+            efficiencyplot.GetFrame()->SetFillColor(21);
+            efficiencyplot.GetFrame()->SetBorderSize(12);
 
             names="Efficiency Data";
             names+=std::to_string((int)DetectorAngles[t]);
 
-            efficiencydata = new TGraphErrors(datapoints_ecal,xvec_ecal,yvec_ecal,dxvec_ecal,dyvec_ecal);
-            efficiencydata->SetMarkerStyle(20);
-            efficiencydata->SetMarkerColor(COLOR_ECAL);
-            efficiencydata->SetMarkerSize(1);
-            efficiencydata->SetName(names.c_str());
-            efficiencydata->SetTitle(names.c_str());
-            efficiencydata->SetFillStyle(0);
-            efficiencydata->SetMaximum(YSCALE*TMath::MaxElement(datapoints_ecal,yvec_ecal));
-            efficiencydata->SetMinimum(0);
-            efficiencydata->GetYaxis()->SetNdivisions(505);   //Sets number of Ticks
-            efficiencydata->GetYaxis()->SetDecimals(kTRUE); //Sets same digits
+            TGraphErrors efficiencydata(datapoints_ecal,xvec_ecal,yvec_ecal,dxvec_ecal,dyvec_ecal);
+            efficiencydata.SetMarkerStyle(20);
+            efficiencydata.SetMarkerColor(COLOR_ECAL);
+            efficiencydata.SetMarkerSize(1);
+            efficiencydata.SetName(names.c_str());
+            efficiencydata.SetTitle(names.c_str());
+            efficiencydata.SetFillStyle(0);
+            efficiencydata.SetMaximum(YSCALE*TMath::MaxElement(datapoints_ecal,yvec_ecal));
+            efficiencydata.SetMinimum(0);
+            efficiencydata.GetYaxis()->SetNdivisions(505);   //Sets number of Ticks
+            efficiencydata.GetYaxis()->SetDecimals(kTRUE); //Sets same digits
         
             names="Efficiency Simulation ";
             names+=std::to_string((int)DetectorAngles[t]);
-            efficiencysim = new TGraphErrors(datapoints_sim,xvec_sim,yvec_sim,0,0);
-            efficiencysim->SetMarkerStyle(20);
-            efficiencysim->SetMarkerColor(COLOR_SIM);
-            efficiencysim->SetMarkerSize(1);
-            efficiencysim->SetLineColor(COLOR_SIM);
-            efficiencysim->SetName(names.c_str());
-            efficiencysim->SetTitle(names.c_str());
-            efficiencysim->SetFillStyle(0);
-            efficiencysim->SetMaximum(YSCALE*TMath::MaxElement(datapoints_sim,yvec_sim));
-            efficiencysim->SetMinimum(0);
-            efficiencysim->GetYaxis()->SetNdivisions(505);   //Sets number of Ticks
-            efficiencysim->GetYaxis()->SetDecimals(kTRUE); //Sets same digits
+            TGraphErrors efficiencysim(datapoints_sim,xvec_sim,yvec_sim,0,0);
+            efficiencysim.SetMarkerStyle(20);
+            efficiencysim.SetMarkerColor(COLOR_SIM);
+            efficiencysim.SetMarkerSize(1);
+            efficiencysim.SetLineColor(COLOR_SIM);
+            efficiencysim.SetName(names.c_str());
+            efficiencysim.SetTitle(names.c_str());
+            efficiencysim.SetFillStyle(0);
+            efficiencysim.SetMaximum(YSCALE*TMath::MaxElement(datapoints_sim,yvec_sim));
+            efficiencysim.SetMinimum(0);
+            efficiencysim.GetYaxis()->SetNdivisions(505);   //Sets number of Ticks
+            efficiencysim.GetYaxis()->SetDecimals(kTRUE); //Sets same digits
 
             names="Efficiency Function ";
             names+=std::to_string((int)DetectorAngles[t]);
 
-            EFunction.SetParameter(0,Parameter_All[t][0]);
-            for(unsigned int i=2;i<NumberofParameters+1;i++)
+            for(unsigned int i=0;i<NumberofParameters;i++)
             {
                 EFunction.SetParameter(i,Parameter_All[t][i]);
             }
@@ -449,11 +448,14 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
                 EFunctionDOWN.SetLineColor(COLOR_DFIT);
                 EFunctionDOWN.SetLineStyle(7);
                 EFunctionDOWN.SetLineWidth(1);
-            } 
+                string errorstring=std::to_string(SIGMA);
+                errorstring+=" Sigma-Range";
+                EFunctionUP.SetName(errorstring.c_str());
+            }
 
         TMultiGraph *mg = new TMultiGraph();
-        mg->Add(efficiencysim);
-        mg->Add(efficiencydata);
+        mg->Add(&efficiencysim);
+        mg->Add(&efficiencydata);
         string title="Efficiency fitted via Knoll-Model";
         title.append(std::to_string((int) DetectorAngles[t]));
         title.append(" deg;Energy in keV;Efficiency in a.u.;");
@@ -466,8 +468,8 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         TLegend *legend;
         legend=new TLegend(0.7,0.5,0.9,0.9);
         legend->AddEntry(&EFunction,EFunction.GetName(),"l");
-        legend->AddEntry(efficiencydata,efficiencydata->GetName(),"l");
-        legend->AddEntry(efficiencysim,efficiencysim->GetName(),"l");
+        legend->AddEntry(&efficiencydata,efficiencydata.GetName(),"l");
+        legend->AddEntry(&efficiencysim,efficiencysim.GetName(),"l");
         if(ERRORBARS)legend->AddEntry(&EFunctionUP,EFunctionUP.GetName(),"l");
         legend->Draw();
         
@@ -482,17 +484,17 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         str.append(out.GetDate());
         str.append(".pdf");
         str="Output/"+str;
-        efficiencyplot->SaveAs(str.c_str());
+        efficiencyplot.SaveAs(str.c_str());
         cout<<"Efficiency of Detector under "<<(int)DetectorAngles[t]<< "deg saved. ( "<<str<<" )"<<endl;
-        // efficiencyplot->Write();
-        // EFunction.Write();
-        // efficiencydata->Write();
-        // efficiencysim->Write();
+        efficiencyplot.Write();
+        EFunction.Write();
+        efficiencydata.Write();
+        efficiencysim.Write();
 
 
-        delete efficiencyplot;
         Parameter_All[t].insert(Parameter_All[t].begin()+1,1,Parameter_All[t][NumberofParameters]);
         Parameter_All[t].pop_back();
     }
-    // RFile->Close();
+    RFile->Write();
+    RFile->Close();
 }

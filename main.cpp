@@ -150,11 +150,11 @@ vector<double> ECalTime;
     if(!threadbool)TNumber=1;
     if(!rootbool)rootfile="Output/default.root";
 
-    // TFile* RFile = TFile::Open(rootfile.c_str(),"RECREATE");
-    // RFile->mkdir("Efficiency","Efficiency");
-    // RFile->mkdir("Flux","Flux");
-    // RFile->Write();
-    // RFile->Close();
+    TFile* RFile=TFile::Open(rootfile.c_str(),"RECREATE");
+    RFile->mkdir("Efficiency");
+    RFile->mkdir("Flux");
+    RFile->Write();
+    RFile->Close();
 
 DataReader read;
 if(input)
@@ -335,17 +335,13 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         out.SetPreDataString("Energy dEnergy Efficiency dEfficiency");
         out.WriteLog(CalculatedEfficiency[t]);
         }
-    
+
         // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
         // // 
         // // Flux Calculation and Fitting
         // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // //
         
-        // cout<<"Filename: "<<IExperimentalDataFile<<endl;
-        // cout<<"Filename: "<<ExperimentalDataFile<<endl;
-
-
         vector<vector<double> > ICS,PhotonFlux;
         Flux flux;
             flux.SetFileName(IExperimentalDataFile);
