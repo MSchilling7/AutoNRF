@@ -3,7 +3,7 @@
 default     kobalt_pol.dat  sim.dat Knoll   1e2   1       0   0   0   0   0  0 1 2
 //Flux
 //FluxParameter   NFit scale   E0min E0max  Z      Mass    dMass  Experimental Angels
-Bor_Parameter.dat 1e7  1e2     8.5      20  79     1e-11   1e-14  default      90 130
+Bor_Parameter.dat 1e2  1e2     8.5      20  79     1e-11   1e-14  default      90 130
 ////////////////////////////////////////////////////////////////////////////////////////
 // NEXT
 ///////////////////////////////////////////////////////////////////////////////////////

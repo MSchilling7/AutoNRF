@@ -16,6 +16,9 @@
 #include<omp.h>
 #include<TFile.h>
 
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 #include"DataReader.h"
 #include"Efficiency.h"
@@ -147,14 +150,20 @@ vector<Functions::EFunc> FitFunctionArray;
 vector<vector<double> > FitParameterArray_Efficency,FitParameterArray_Flux;
 vector<double> DetectorAngles;
 vector<double> ECalTime;
-    if(!threadbool)TNumber=1;
-    if(!rootbool)rootfile="Output/default.root";
 
-    TFile* RFile=TFile::Open(rootfile.c_str(),"RECREATE");
-    RFile->mkdir("Efficiency");
-    RFile->mkdir("Flux");
-    RFile->Write();
-    RFile->Close();
+struct stat st = {}; //Struct to check if Directory "Output" exists
+if (stat("Output", &st) == -1)
+{
+    mkdir("Output", 0777);
+    cout<<"Created directory \"Output\"'!"<<endl<<endl;
+}
+if(!threadbool)TNumber=1;
+if(!rootbool)rootfile="Output/default.root";
+TFile* RFile=TFile::Open(rootfile.c_str(),"RECREATE");
+RFile->mkdir("Efficiency");
+RFile->mkdir("Flux");
+RFile->Write();
+RFile->Close();
 
 DataReader read;
 if(input)
