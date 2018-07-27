@@ -85,7 +85,7 @@ using std::thread;
 #define COLOR_FLUX 1
 #define COLOR_FIT 2
 #define COLOR_DFIT 4
-#define PROTONNUMBER 79
+#define ENDPOINT 1.5
 
 
 class Flux
@@ -97,7 +97,22 @@ public:
     ~Flux();
     
     /// Copy Constructor for Flux
-    Flux(const Flux&)
+    Flux(const Flux&):
+    FileName(""),
+    rfile(""),
+    NFit(0),
+    NumberOfThreads(0),
+    ExperimentalData(),
+    calcEfficiency(),
+    ICS(),
+    FluxParameter(),
+    PhotonFluxData(),
+    FitParameterDistribution(),
+    Parameter_Flux(),
+    DetectorAngles(),
+    ScaleParameter(),
+    EndPointParameter(),
+    Parameter_Efficiency()
     {;};
     void SetRootFile(string rootfile){rfile=rootfile;};
     void SetInputData(vector<vector<vector<double> > >Data){ExperimentalData=Data;};
@@ -107,7 +122,6 @@ public:
     void SetFitParameters(vector<double>par){Parameter_Flux=par;};
     void SetNThread(unsigned int t){NumberOfThreads=t;};
     void SetDetectorAngles(vector<double> Angles){DetectorAngles=Angles;};
-    void SetEFunctionEnum(Functions::EFunc a){FitFunctionEnum=a;};
     
     vector<vector<double> > GetPhotonFluxData(){return PhotonFluxData;};
     vector<vector<double> > GetICS(){return ICS;};
@@ -136,13 +150,9 @@ private:
 
     string FileName= "";
     string rfile = "";
-    TFile* RFile;
     vector<double>GetParameterFlux(){return Parameter_Flux;}
     bool PhotonFluxFitter(unsigned int NThread);
-    unsigned int NFit,NumberOfFits,NumberOfThreads,NumberOfRestFits;
-    TF1 *EfficiencyFunction;
-    TF1* Schiff;
-    TF1* GetSchiffFormula(){return Schiff;}
+    unsigned int NFit,NumberOfFits,NumberOfThreads;
     vector<vector<vector<double> > >ExperimentalData;
     vector<vector<vector<double> > >calcEfficiency;
     vector<vector<double> > ICS;
@@ -153,7 +163,6 @@ private:
     vector<double> ScaleParameter,EndPointParameter;
     vector<vector<double> > Parameter_Efficiency;
     const double hqc= 197.3269788*1000;//keV fm
-    Functions::EFunc FitFunctionEnum;
     
 
 };

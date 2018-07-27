@@ -146,7 +146,6 @@ high_resolution_clock::time_point start = high_resolution_clock::now();
 // // // 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 vector <vector <string> > DataFileArray;
-vector<Functions::EFunc> FitFunctionArray;
 vector<vector<double> > FitParameterArray_Efficency,FitParameterArray_Flux;
 vector<double> DetectorAngles;
 vector<double> ECalTime;
@@ -172,7 +171,6 @@ if(input)
     read.SetInputName(InputFile);
     read.SetInputParameter();
     DataFileArray=read.GetDataFileArray();
-    FitFunctionArray=read.GetFitFunctionArray();
     FitParameterArray_Efficency=read.GetFitParameterArray_Efficency();
     FitParameterArray_Flux=read.GetFitParameterArray_Flux();        
     DetectorAngles=read.GetDetectorAnglesArray();
@@ -195,8 +193,6 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     string ISimulationDataFile   = DataFileArray[i][2];
     string IFCalibrationDataFile = DataFileArray[i][3];
     string IExperimentalDataFile = DataFileArray[i][4];
-    
-    Functions::EFunc FunctionEnum=FitFunctionArray[i];
     
     vector<double> Parameter_Efficency=FitParameterArray_Efficency[i];
     vector<double> Parameter_Flux=FitParameterArray_Flux[i];
@@ -361,7 +357,6 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
             flux.SetFluxParameter(FluxCalibrationData);
             flux.SetEfficiencyParameter(effi.GetFittedParameters());
             flux.SetFitParameters(Parameter_Flux);
-            flux.SetEFunctionEnum(FunctionEnum);
             flux.CalculateEfficiencyforExperimentalData();
             flux.CorrectingPeakArea();
             ExperimentalData=flux.GetExperimentalData();
@@ -384,7 +379,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
 
 high_resolution_clock::time_point stop = high_resolution_clock::now();
 duration<double> delta_t = duration_cast< duration<double>>(stop - start);
-cout << endl <<  "> main.cpp: Execution took " << delta_t.count() << " seconds" << endl<<endl;
+cout <<std::fixed<< endl <<  "> main.cpp: Execution took " << delta_t.count() << " seconds" << endl<<endl;
 
 
 

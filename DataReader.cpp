@@ -36,8 +36,6 @@ void DataReader::SetInputParameter()
     string SimulationFile;
     string FCalFile;
     string ExperimentalDataFile;
-    string fitfuncstring;
-    Functions::EFunc fitfunc;
     double timeM;
     string nfit_str,mass_str,dmass_str;
     double scale;
@@ -76,7 +74,6 @@ void DataReader::SetInputParameter()
                     ScourceFile           >>
                     ECalFile              >>
                     SimulationFile        >>
-                    fitfuncstring         >>
                     nfit_str              >>
                     scale                 >>
                     a0                    >> 
@@ -85,14 +82,10 @@ void DataReader::SetInputParameter()
                     a3                    >> 
                     a4                    >>
                     a5             ;
-                    if(fitfuncstring=="Knoll"){fitfunc=Functions::EFunc::Knoll;}
-                    if(fitfuncstring=="a4"){fitfunc=Functions::EFunc::a4;}
-                    if(fitfuncstring=="Jaeckel"){fitfunc=Functions::EFunc::Jaeckel;}
                     
                 DataFileline.push_back(ScourceFile);                    //0
                 DataFileline.push_back(ECalFile);                       //1
                 DataFileline.push_back(SimulationFile);                 //2
-                fitfuncarray.push_back(fitfunc); 
                 tempVector.push_back((int)stod(nfit_str,&sz));     //0
                 tempVector.push_back(scale);    //1
                 tempVector.push_back(a0);       //2

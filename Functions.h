@@ -43,7 +43,6 @@ public:
     static double Schiff(double *k,double *par);
     static double SkewNormal(double *x,double *par);
     static double LogNormal_Gamma_Dist(double *x,double *par);
-    enum class EFunc{Knoll,a4,Jaeckel};
     
     
     vector<int> Maching2Doubles(vector< vector <double> > a,int anumber,const char aCorR, vector<vector <double> > b, int bnumber,const char bCorR);

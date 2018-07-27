@@ -281,14 +281,13 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
     void Efficiency::PlotScaleDist()
     {
         TFile* RFile=TFile::Open(rfile.c_str(),"update");
-        RFile->cd("Efficiency");
 
         for(unsigned int t=0;t<DetectorAngles.size();t++)
         {
-            string dirname="Detector ";
-            // dirname.append(std::to_string(DetectorAngles[t]));
-            // RFile->mkdir(dirname.c_str());
-            // RFile->cd(dirname.c_str());
+            string dirname="Efficiency/Detector ";
+            dirname.append(std::to_string((int)DetectorAngles[t]));
+            RFile->mkdir(dirname.c_str());
+            RFile->cd(dirname.c_str());
             double xlow=TMath::MinElement(NFit,&FitParameterDistribution[t][0]);
             double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[t][0]);
 
@@ -354,9 +353,12 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         TF1 EFunction("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
         TF1 EFunctionUP("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
         TF1 EFunctionDOWN("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
-        for(unsigned int t=0;t<ECalTime.size();t++)
+        for(unsigned int t=0;t<DetectorAngles.size();t++)
         {
-
+            string dirname="Efficiency/Detector ";
+            dirname.append(std::to_string((int)DetectorAngles[t]));
+            RFile->mkdir(dirname.c_str());
+            RFile->cd(dirname.c_str());
             int datapoints_ecal=(int) EfficiencyDataArray[t].size();
             int datapoints_sim=(int) simulationData[t].size();
             Double_t xvec_ecal[datapoints_ecal];

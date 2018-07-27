@@ -4,3 +4,4 @@ Output/*
 *.d
 *.so
 AutoNRF
+G__AutoNRF.cpp

@@ -56,7 +56,6 @@ public:
     vector<vector<double> >GetFitParameterArray_Flux()const{return fitParameterarray_Flux;};
     vector<double> GetDetectorAnglesArray()const{return DetectorAngles;};
     vector<double> GetECalTimeArray()const{return ETimes;};
-    vector<Functions::EFunc> GetFitFunctionArray()const{return fitfuncarray;};
     vector <vector <string> > GetDataFileArray()const{return DataFilearray;};
     
     vector<vector<double> > GetFluxCalibrationDataArray()const{return fluxcalibrationData;};
@@ -79,7 +78,6 @@ private:
     
     vector<vector<double> > fitParameterarray_Efficency,fitParameterarray_Flux;
     vector<double> DetectorAngles,ETimes;
-    vector<Functions::EFunc> fitfuncarray;
     vector<string> DataFileline;
     vector <vector <string> > DataFilearray;
     
