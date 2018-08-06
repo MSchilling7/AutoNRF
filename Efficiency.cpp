@@ -122,6 +122,7 @@ void Efficiency::FitEfficiency()
             // cout<<"Creating thread: "<<Name<<endl;
             TThread* Thread = new TThread(Name, (void(*) (void *)) &CallParallelEfficiencyFitThread, (void*) new ThreadCallerEfficiency(this, t));
             Threads[t] = Thread;
+            gSystem->Sleep(10);
             Thread->Run();
             // Wait until thread is initialized:
             while (ThreadIsInitialized[t] == false && ThreadIsFinished[t] == false)
@@ -266,9 +267,9 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
                 // TThread::Printf("Thread %i: Results E0= %.5f     Scale= %.5f    Nr: %i", NThread, E0,Scale,ID);
                 // TThread::Printf("Thread %i: ID=%i     i=%i",NThread,ID,ID+NFit/NumberOfThreads*NThread);
             }
-            TThread::Lock();
+            // TThread::Lock();
                 FitParameterDistribution[NDetector][ID+NFit/NumberOfThreads*NThread]=Scale;
-            TThread::UnLock();
+            // TThread::UnLock();
         }
     }
     ThreadIsFinished[NThread]=true;
@@ -341,7 +342,7 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             Parameter_All[t].push_back(FitParameterSigma);
         }
         RFile->Write();
-        RFile->Close();
+        // RFile->Close();
     }
 // ---------------------------------------------------------
 
@@ -498,5 +499,5 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         Parameter_All[t].pop_back();
     }
     RFile->Write();
-    RFile->Close();
+    // RFile.Close();
 }

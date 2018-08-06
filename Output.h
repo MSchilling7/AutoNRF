@@ -6,18 +6,10 @@
  */
 #ifndef Output_H
 #define Output_H 1
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <iomanip>
 #include <fstream>
 #include <string>
 #include <sstream> 
-#include <cstring>
 #include <vector>
-#include <ctime>
-#include <time.h>
-#include <Rtypes.h>
 
 using std::string;
 using std::stringstream;

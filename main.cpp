@@ -5,15 +5,7 @@
  * @brief Main cpp for the project
  */
 
-#include<iostream>
-#include <iomanip> 
-#include<cstdlib>
-#include<stdlib.h>
 #include<getopt.h>
-#include <chrono>
-#include <ctime>
-#include <ratio>
-#include<omp.h>
 #include<TFile.h>
 
 #include <sys/types.h>
@@ -305,11 +297,11 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         }
 
     cout<<"Reading Data Complete!"<<endl;
-        // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
-        // // // 
-        // // // Efficiency Calculation and Fitting
-        // // // 
-        // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
+    // // // 
+    // // // Efficiency Calculation and Fitting
+    // // // 
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
     Efficiency effi;
     effi.SetFileName(IECalibrationDataFile);
     effi.SetRootFile(rootfile);
@@ -326,10 +318,10 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     cout<<"Calculated Efficiencies for all Detectors"<<endl;
         // read.Print3DArray(CalculatedEfficiency);
     effi.FitEfficiency();
-            effi.PlotScaleDist();
-            effi.PlotEFunc();
-        for(unsigned int t=0;t<DetectorAngles.size();t++)
-        {
+    effi.PlotScaleDist();
+    effi.PlotEFunc();
+    for(unsigned int t=0;t<DetectorAngles.size();t++)
+    {
         string FileName="Efficiency_from_";
         FileName.append(IECalibrationDataFile.substr(0,IECalibrationDataFile.size()-4));
         FileName.append("_");
@@ -339,41 +331,41 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         out.FileChecker();
         out.SetPreDataString("Energy dEnergy Efficiency dEfficiency");
         out.WriteLog(CalculatedEfficiency[t]);
-        }
+    }
 
-        // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
-        // // 
-        // // Flux Calculation and Fitting
-        // // 
-        // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
+    // // 
+    // // Flux Calculation and Fitting
+    // // 
+    // // // // // // // // // // // // // // // // // // // // // // // // // // // //
         
-        vector<vector<double> > ICS,PhotonFlux;
-        Flux flux;
-            flux.SetFileName(IExperimentalDataFile);
-            flux.SetRootFile(rootfile);
-            flux.SetNThread(TNumber);
-            flux.SetDetectorAngles(DetectorAngles);
-            flux.SetInputData(ExperimentalData);
-            flux.SetFluxParameter(FluxCalibrationData);
-            flux.SetEfficiencyParameter(effi.GetFittedParameters());
-            flux.SetFitParameters(Parameter_Flux);
-            flux.CalculateEfficiencyforExperimentalData();
-            flux.CorrectingPeakArea();
-            ExperimentalData=flux.GetExperimentalData();
-            cout<<"Corrected PeakAreas:"<<endl<<endl;
-            read.Print3DArray(ExperimentalData);
-            cout<<endl;
-            flux.CalculateICS();
-            ICS=flux.GetICS();
-            cout<<"Integrated Cross Section:"<<endl<<endl;
-            read.Print2DArray(ICS);
-            flux.CalculateFlux();
-            PhotonFlux=flux.GetPhotonFluxData();
-            cout<<"Photon Flux:"<<endl<<endl;
-            read.Print2DArray(PhotonFlux);
-            flux.FitPhotonFlux();
-            flux.PlotFitParameters();
-            flux.PlotPhotonFlux();
+    vector<vector<double> > ICS,PhotonFlux;
+    Flux flux;
+    flux.SetFileName(IExperimentalDataFile);
+    flux.SetRootFile(rootfile);
+    flux.SetNThread(TNumber);
+    flux.SetDetectorAngles(DetectorAngles);
+    flux.SetInputData(ExperimentalData);
+    flux.SetFluxParameter(FluxCalibrationData);
+    flux.SetEfficiencyParameter(effi.GetFittedParameters());
+    flux.SetFitParameters(Parameter_Flux);
+    flux.CalculateEfficiencyforExperimentalData();
+    flux.CorrectingPeakArea();
+    ExperimentalData=flux.GetExperimentalData();
+    cout<<"Corrected PeakAreas:"<<endl<<endl;
+    read.Print3DArray(ExperimentalData);
+    cout<<endl;
+    flux.CalculateICS();
+    ICS=flux.GetICS();
+    cout<<"Integrated Cross Section:"<<endl<<endl;
+    read.Print2DArray(ICS);
+    flux.CalculateFlux();
+    PhotonFlux=flux.GetPhotonFluxData();
+    cout<<"Photon Flux:"<<endl<<endl;
+    read.Print2DArray(PhotonFlux);
+    flux.FitPhotonFlux();
+    flux.PlotFitParameters();
+    flux.PlotPhotonFlux();
     
 }	
 

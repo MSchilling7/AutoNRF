@@ -39,11 +39,15 @@ sanitizeflags:
 	
 new:	clean $(PROJ)
 	
+val: $(PROJ)
+	valgrind --log-file="val.log" --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --tool=helgrind --suppressions=$(ROOTSYS)/etc/helgrind-root.supp ./AutoNRF -i input.par 
 	
+val4: $(PROJ)
+	valgrind --log-file="val.log" --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --tool=helgrind --suppressions=$(ROOTSYS)/etc/helgrind-root.supp ./AutoNRF -i input.par -t 4
 	
 	
 run: $(PROJ)
-	LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH ./$(PROJ) -i input.par
+	LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH ./$(PROJ) -i input.par -t 4
 #$$ for bash Enviroment Variable
 clean:
 	@rm -f ${OBJ} G__*  lib$(PROJ).so $(PROJ) *_ACLiC_dict_* *.log ${MAIN}; echo Make the Project clean again!

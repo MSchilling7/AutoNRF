@@ -8,43 +8,18 @@
 #ifndef Efficiency_H
 #define Efficiency_H 1
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <cstring>
-#include <cmath>
-#include <algorithm>
 #include <vector>
-#include <iomanip>  
-#include <time.h>
-#include <TROOT.h>
 #include <TCanvas.h>
-#include <TApplication.h>
 #include <TMath.h>
-#include <TGraph.h>
 #include <TMultiGraph.h>
 #include <TRandom3.h>
-#include <TH1F.h>
+#include <TH1.h>
 #include <TGraphErrors.h>
-#include <TFrame.h>
-#include <TVirtualFitter.h>
-#include <TMatrixDSym.h>
-#include <TFitResult.h>
-#include <TFitResultPtr.h>
 #include <TLegend.h>
 #include <TFile.h>
 
-#include <thread> 
-#include <mutex>  
-#include <chrono>
-
 using std::vector;
 using std::string;
-using std::ifstream;
-using std::thread;
 
 #include "Output.h"
 #include "Functions.h"

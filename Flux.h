@@ -8,52 +8,17 @@
 #ifndef FLUX_H
 #define FLUX_H 1
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include <string>
-#include <sstream>
-#include <cstring>
-#include <cmath>
-#include <algorithm>
 #include <vector>
-#include <iomanip>  
-#include <time.h>
-#include <TROOT.h>
 #include <TCanvas.h>
-#include <TApplication.h>
 #include <TMath.h>
-#include <TGraph.h>
 #include <TMultiGraph.h>
 #include <TRandom3.h>
-#include <TH1F.h>
 #include <TF1.h>
 #include <TGraphErrors.h>
 #include <TFrame.h>
-#include <TVirtualFitter.h>
-#include <TMatrixDSym.h>
-#include <TFitResult.h>
 #include <TLegend.h>
 
-#include "TCanvas.h"
-#include "TThread.h"
-#include "TMutex.h"
-#include "TROOT.h"
-#include "TPluginManager.h"
-
-#include "Math/WrappedTF1.h"
-#include "Math/WrappedMultiTF1.h"
-#include "Math/Polynomial.h"
-#include "Math/Interpolator.h"
-#include "Fit/BinData.h"
-#include "Fit/UnBinData.h"
-#include "HFitInterface.h"
-#include "Fit/Fitter.h"
-
-#include <thread> 
-#include <mutex>  
-#include <chrono>
+#include <TCanvas.h>
 
 
 #include "Functions.h"
@@ -62,8 +27,6 @@
 
 using std::vector;
 using std::string;
-using std::ifstream;
-using std::thread;
 
 #define EX 0
 #define E_FINAL 1
