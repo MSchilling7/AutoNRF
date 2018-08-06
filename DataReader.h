@@ -9,6 +9,7 @@
 #define DataReader_H 1
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <sstream> 
 #include <vector>
 #include "Functions.h"

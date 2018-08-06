@@ -6,6 +6,9 @@
  */
 #ifndef Output_H
 #define Output_H 1
+#include <stdlib.h>
+#include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <string>
 #include <sstream> 

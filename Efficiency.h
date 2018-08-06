@@ -17,6 +17,7 @@
 #include <TGraphErrors.h>
 #include <TLegend.h>
 #include <TFile.h>
+#include <TFrame.h>
 
 using std::vector;
 using std::string;
