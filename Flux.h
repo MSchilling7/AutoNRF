@@ -65,6 +65,7 @@ public:
     rfile(""),
     NFit(0),
     NumberOfThreads(0),
+    Percent(),
     ExperimentalData(),
     calcEfficiency(),
     ICS(),
@@ -116,6 +117,7 @@ private:
     vector<double>GetParameterFlux(){return Parameter_Flux;}
     bool PhotonFluxFitter(unsigned int NThread);
     unsigned int NFit,NumberOfFits,NumberOfThreads;
+    vector<unsigned int>Percent;
     vector<vector<vector<double> > >ExperimentalData;
     vector<vector<vector<double> > >calcEfficiency;
     vector<vector<double> > ICS;

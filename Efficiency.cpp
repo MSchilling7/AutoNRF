@@ -22,11 +22,12 @@ Efficiency::Efficiency():
     NFit(0),
     FitParameterMean(0),
     FitParameterSigma(0),
+    Percent(),
     Parameter(),
-    FitParameterDistribution(),
-    Parameter_All(),
     ECalTime(),
     DetectorAngles(),
+    FitParameterDistribution(),
+    Parameter_All(),
     sData(),
     ecalData(),
     simulationData(),
@@ -110,6 +111,7 @@ void Efficiency::FitEfficiency()
         }
     }
     Threads.resize(NumberOfThreads);
+    for(unsigned int i = 0;i<NumberOfThreads;i++)Percent.push_back(0);
     for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsFinished.push_back(false);
     for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsInitialized.push_back(false);
     if (NumberOfThreads > 1)
@@ -158,7 +160,8 @@ void Efficiency::FitEfficiency()
     else
     {
         EfficiencyFitter(0);
-    }        
+    }
+    cout<<endl;
 
     cout<<"Detector Efficiency fitted. Check log files!"<<endl;
 }
@@ -179,7 +182,7 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
     double Scale;
     string equal="==========";
     string space="          ";
-    bool percent[20]={false};
+    bool percent[128]={false};
     ThreadIsInitialized[NThread] = true;
     EfficiencyFitFunc FitFunction;
 
@@ -200,76 +203,79 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
     vector<vector<double> >Par;
     Data=GetEfficiencyDataArray();
     Par=GetFittedParameters();
-
-    for(unsigned int NDetector=0;NDetector<DetectorAngles.size();NDetector++)
+    unsigned int NumberofFits=NFit/NumberOfThreads;
+    for(unsigned int i=0;i<NumberofFits;i++)
     {
-        for(unsigned int i = 0 ; i<NumberofParameters;i++){EFunction.ReleaseParameter(i);};
-        for(unsigned int i = 0 ; i<NumberofParameters;i++)EFunction.FixParameter(i,Par[NDetector][i]);
-        EFunction.ReleaseParameter(0);
-    
-        int datapoints_ecal=(int)Data[NDetector].size();
-        Double_t xvec_ecal[datapoints_ecal];
-        Double_t yvec_ecal[datapoints_ecal];
-    
-        TRandom3 random(0);
-    
-        ROOT::Fit::Fitter TheFitter;
-        // TheFitter.Config().SetMinimizer("GSLMultiFit");
-        TheFitter.Config().SetMinimizer("Minuit2","Combined");
-        TheFitter.SetFunction(FitFunction);
-        TheFitter.Config().MinimizerOptions().SetPrintLevel(0);
-        for(unsigned int i=0;i<NFit/NumberOfThreads;i++)
+        for(unsigned int NDetector=0;NDetector<DetectorAngles.size();NDetector++)
         {
-    
-            for(unsigned int j=0;j<Data[NDetector].size();j++)
-            {
-                xvec_ecal[j]=random.Gaus(Data[NDetector][j][0],Data[NDetector][j][1]);
-                yvec_ecal[j]=random.Gaus(Data[NDetector][j][2],Data[NDetector][j][3]);
-            }
-            TGraph DataGraph((const Int_t)datapoints_ecal,xvec_ecal,yvec_ecal);
-            TThread::Lock();
-            unsigned int ID = i;
-            TThread::UnLock();
-            for(unsigned int j=1;j<11;j++)
-            {
-                if(j*NFit/10/NumberOfThreads==ID+1 && percent[j]==false)
+            for(unsigned int k = 0 ; k<NumberofParameters;k++){EFunction.ReleaseParameter(k);};
+            for(unsigned int k = 0 ; k<NumberofParameters;k++)EFunction.FixParameter(k,Par[NDetector][k]);
+            EFunction.ReleaseParameter(0);
+        
+            int datapoints_ecal=(int)Data[NDetector].size();
+            Double_t xvec_ecal[datapoints_ecal];
+            Double_t yvec_ecal[datapoints_ecal];
+        
+            TRandom3 random(0);
+        
+            ROOT::Fit::Fitter TheFitter;
+            // TheFitter.Config().SetMinimizer("GSLMultiFit");
+            TheFitter.Config().SetMinimizer("Minuit2","Combined");
+            TheFitter.SetFunction(FitFunction);
+            TheFitter.Config().MinimizerOptions().SetPrintLevel(0);
+        
+                for(unsigned int j=0;j<Data[NDetector].size();j++)
                 {
-                    cout<<"Thread "<<NThread<<": ["<<equal.substr(0,j)<<space.substr(j,10)<<"] "<< j <<"0%"<<endl;
-                    percent[j]=true;
+                    xvec_ecal[j]=random.Gaus(Data[NDetector][j][0],Data[NDetector][j][1]);
+                    yvec_ecal[j]=random.Gaus(Data[NDetector][j][2],Data[NDetector][j][3]);
                 }
-            }
-    
-    
-            ROOT::Fit::BinData d;
-            ROOT::Fit::FillData(d,&DataGraph); 
-            TheFitter.Config().ParSettings(0).SetName("Scale");
-            TheFitter.Config().ParSettings(0).SetValue(Par[NDetector][0]);
-            TheFitter.Config().ParSettings(1).SetName("a0");
-            TheFitter.Config().ParSettings(1).SetValue(Par[NDetector][1]);
-            TheFitter.Config().ParSettings(1).Fix();
-            TheFitter.Config().ParSettings(2).SetName("a1");
-            TheFitter.Config().ParSettings(2).SetValue(Par[NDetector][2]);
-            TheFitter.Config().ParSettings(2).Fix();
-            TheFitter.Config().ParSettings(3).SetName("a2");
-            TheFitter.Config().ParSettings(3).SetValue(Par[NDetector][3]);
-            TheFitter.Config().ParSettings(3).Fix();
-            TheFitter.Config().ParSettings(4).SetName("a3");
-            TheFitter.Config().ParSettings(4).SetValue(Par[NDetector][4]);
-            TheFitter.Config().ParSettings(4).Fix();
-            TheFitter.Config().ParSettings(5).SetName("a4");
-            TheFitter.Config().ParSettings(5).SetValue(Par[NDetector][5]);
+                TGraph DataGraph((const Int_t)datapoints_ecal,xvec_ecal,yvec_ecal);
+                TThread::Lock();
+                unsigned int ID = i;
+                for(unsigned int j=1;j<101;j++)
+                {
+                    if(j*NFit/100/NumberOfThreads==ID+1 && percent[j]==false)
+                    {
+                        Percent[NThread]=j;
+                        cout<<"\r";
+                        for(unsigned int p=0;p<Percent.size();p++)
+                            {
+                                cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
+                            }
+                            cout<<std::flush;
+                        percent[j]=true;
+                        break;
+                    }
+                }
+                TThread::UnLock();
+                ROOT::Fit::BinData d;
+                ROOT::Fit::FillData(d,&DataGraph); 
+                // TheFitter.Config().ParSettings(0).SetName("Scale");
+                TheFitter.Config().ParSettings(0).SetValue(Par[NDetector][0]);
+                // TheFitter.Config().ParSettings(1).SetName("a0");
+                TheFitter.Config().ParSettings(1).SetValue(Par[NDetector][1]);
+                TheFitter.Config().ParSettings(1).Fix();
+                // TheFitter.Config().ParSettings(2).SetName("a1");
+                TheFitter.Config().ParSettings(2).SetValue(Par[NDetector][2]);
+                TheFitter.Config().ParSettings(2).Fix();
+                // TheFitter.Config().ParSettings(3).SetName("a2");
+                TheFitter.Config().ParSettings(3).SetValue(Par[NDetector][3]);
+                TheFitter.Config().ParSettings(3).Fix();
+                // TheFitter.Config().ParSettings(4).SetName("a3");
+                TheFitter.Config().ParSettings(4).SetValue(Par[NDetector][4]);
+                TheFitter.Config().ParSettings(4).Fix();
+                // TheFitter.Config().ParSettings(5).SetName("a4");
+                TheFitter.Config().ParSettings(5).SetValue(Par[NDetector][5]);
             
-            bool ReturnCode = false;
-            ReturnCode = TheFitter.Fit(d);
-            if(ReturnCode == true)
-            {
-                Scale = TheFitter.Result().Parameter(0);
-                // TThread::Printf("Thread %i: Results E0= %.5f     Scale= %.5f    Nr: %i", NThread, E0,Scale,ID);
-                // TThread::Printf("Thread %i: ID=%i     i=%i",NThread,ID,ID+NFit/NumberOfThreads*NThread);
-            }
-            // TThread::Lock();
-                FitParameterDistribution[NDetector][ID+NFit/NumberOfThreads*NThread]=Scale;
-            // TThread::UnLock();
+                bool ReturnCode = false;
+                ReturnCode = TheFitter.Fit(d);
+                if(ReturnCode == true)
+                {
+                    Scale = TheFitter.Result().Parameter(0);
+                    // TThread::Printf("Thread %i: Results E0= %.5f     Scale= %.5f    Nr: %i", NThread, E0,Scale,ID);
+                    // TThread::Printf("Thread %i: ID=%i     i=%i",NThread,ID,ID+NumberofFits*NThread);
+                }
+                FitParameterDistribution[NDetector][ID+NumberofFits*NThread]=Scale;
         }
     }
     ThreadIsFinished[NThread]=true;

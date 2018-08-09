@@ -52,11 +52,12 @@ public:
     NFit(0),
     FitParameterMean(0),
     FitParameterSigma(0),
+    Percent(),
     Parameter(),
-    FitParameterDistribution(),
-    Parameter_All(),
     ECalTime(),
     DetectorAngles(),
+    FitParameterDistribution(),
+    Parameter_All(),
     sData(),
     ecalData(),
     simulationData(),
@@ -98,13 +99,17 @@ private:
     unsigned int NFit;
     double FitParameterMean;
     double FitParameterSigma;
+    vector<unsigned int> Percent;
     vector<double> Parameter;
-    vector<vector<double> >FitParameterDistribution,Parameter_All;
-    vector<double> ECalTime,DetectorAngles;
+    vector<double> ECalTime;
+    vector<double>DetectorAngles;
+    vector<vector<double> >FitParameterDistribution;
+    vector<vector<double> >Parameter_All;
     vector<vector<vector<double> > > sData;
     vector<vector<vector<double> > >  ecalData;
     vector<vector<vector<double> > >  simulationData;
     vector<vector<vector<double> > > EfficiencyDataArray;
+
     
 };
 class ThreadCallerEfficiency

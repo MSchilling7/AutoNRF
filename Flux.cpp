@@ -19,6 +19,7 @@ Flux::Flux():
     rfile(""),
     NFit(0),
     NumberOfThreads(0),
+    Percent(),
     ExperimentalData(),
     calcEfficiency(),
     ICS(),
@@ -324,6 +325,7 @@ void Flux::CalculateFlux()
         FitParameterDistribution[0].resize(NFit);
         FitParameterDistribution[1].resize(NFit);
         Threads.resize(NumberOfThreads);
+        for(unsigned int i = 0 ; i<NumberOfThreads ; i++)Percent.push_back(0);
         for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsFinished.push_back(false);
         for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsInitialized.push_back(false);
         if (NumberOfThreads > 1)
@@ -375,7 +377,7 @@ void Flux::CalculateFlux()
         {
             PhotonFluxFitter(0);
         }
-
+        cout<<endl;
         gSystem->Sleep(100);
         // cout<<"All threads have finished"<<endl;
         // for(unsigned int i=0;i<FitParameterDistribution[0].size();i++)cout<<setw(15)<<FitParameterDistribution[0][i]<<setw(15)<<FitParameterDistribution[1][i]<<endl;
@@ -394,9 +396,7 @@ void Flux::CallParallelFluxFitThread(void* Address)
 bool Flux::PhotonFluxFitter(unsigned int NThread)
 {
     double Scale, E0;
-    string equal="==========";
-    string space="          ";
-    bool percent[20]={false};
+    bool percent[128]={false};
     ThreadIsInitialized[NThread] = true;
     FluxFitFunc FitFunction;
 
@@ -430,19 +430,24 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
             yvec_flux[j]=random.Gaus(PhotonFluxData[j][2],PhotonFluxData[j][3]);
         }
         TGraph DataGraph((const Int_t)datapoints_flux,xvec_flux,yvec_flux);
-        for(unsigned int j=1;j<11;j++)
+        TThread::Lock();
+        unsigned int ID = i;
+        for(unsigned int j=1;j<101;j++)
         {
-            if(j*NFit/10/NumberOfThreads==i+1 && percent[j]==false)
+            if(j*NFit/100/NumberOfThreads==ID+1 && percent[j]==false)
             {
-                cout<<"Thread "<<NThread<<": ["<<equal.substr(0,j)<<space.substr(j,10)<<"] "<< j <<"0%"<<endl;
+                Percent[NThread]=j;
+                cout<<"\r";
+                for(unsigned int p=0;p<Percent.size();p++)
+                {
+                    cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
+                }
+                cout<<std::flush;
                 percent[j]=true;
             }
         }
-
-        TThread::Lock();
-        unsigned int ID = i;
-        // cout<<i<<endl;
         TThread::UnLock();
+
 
         ROOT::Fit::BinData d;
         ROOT::Fit::FillData(d,&DataGraph); 

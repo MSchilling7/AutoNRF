@@ -45,6 +45,10 @@ val: $(PROJ)
 val4: $(PROJ)
 	valgrind --log-file="val.log" --suppressions=$(ROOTSYS)/etc/valgrind-root.supp --tool=helgrind --suppressions=$(ROOTSYS)/etc/helgrind-root.supp ./AutoNRF -i input.par -t 4
 	
+valvis: $(PROJ)
+	valgrind --tool=massif --tool=helgrind ./AutoNRF -i input.par -t 4 
+
+
 	
 run: $(PROJ)
 	LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH ./$(PROJ) -i input.par -t 4

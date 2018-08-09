@@ -6,3 +6,4 @@ Output/*
 AutoNRF
 G__AutoNRF.cpp
 val.log
+massif*
