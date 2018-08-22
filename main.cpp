@@ -36,6 +36,7 @@ int main(int argc, char **argv)
   bool input        = false;
   bool rootbool     = false;
   bool threadbool   = false;
+  bool dirbool      = false;
   int c           = 0;
   
   string InputFile;
@@ -44,7 +45,10 @@ int main(int argc, char **argv)
   string SimulationDataFile;
   string FCalibrationDataFile;
   string ExperimentalDataFile;
+  string rfile;
   string rootfile;
+  string dirname;
+
   
   unsigned int TNumber=1;
   
@@ -55,13 +59,14 @@ int main(int argc, char **argv)
           {"input",                  required_argument,       0, 'i'},
           {"thread",                 required_argument,       0, 't'},
           {"root",                   required_argument,       0, 'r'},
+          {"dir",                    required_argument,       0, 'd'},
           {"help",                   no_argument,             0, 'h'},
           {"help",                   no_argument,             0, '?'}
       };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      c = getopt_long (argc, argv, "i:t:r:h:?",
+      c = getopt_long (argc, argv, "i:t:r:d:h:?",
          long_options, &option_index);
 
       switch (c)
@@ -81,9 +86,13 @@ int main(int argc, char **argv)
         break;            
         
         case 'r':
-        rootfile="Output/";
-        rootfile+=optarg;
+        rfile=optarg;
         rootbool=true;
+        break;
+
+        case 'd':
+        dirname=optarg;
+        dirbool=true;
         break;
 
         case 'h':
@@ -146,15 +155,35 @@ struct stat st = {}; //Struct to check if Directory "Output" exists
 if (stat("Output", &st) == -1)
 {
     mkdir("Output", 0777);
-    cout<<"Created directory \"Output\"'!"<<endl<<endl;
+    cout<<"Created directory /Output/"<<endl<<endl;
 }
+dirname="Output/"+dirname;
+if(!dirbool)dirname="Output/"+out.GetDate();
+
+if (stat(dirname.c_str(), &st) == -1)
+{
+    mkdir(dirname.c_str(), 0777);
+    cout<<"Created directory /"<<dirname.c_str()<<"/"<<endl<<endl;
+}
+dirname+="/";
 if(!threadbool)TNumber=1;
-if(!rootbool)rootfile="Output/default.root";
+if(!rootbool)
+    {
+        rootfile=dirname;
+        rootfile+="default.root";
+    }
+if(rootbool)
+    {
+        rootfile=dirname;
+        rootfile+="/";
+        rootfile+=rfile;
+    }
 TFile* RFile=TFile::Open(rootfile.c_str(),"RECREATE");
 RFile->mkdir("Efficiency");
 RFile->mkdir("Flux");
 RFile->Write();
 RFile->Close();
+Output::dir=dirname;
 
 DataReader read;
 if(input)
@@ -322,15 +351,16 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     effi.PlotEFunc();
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
-        string FileName="Efficiency_from_";
-        FileName.append(IECalibrationDataFile.substr(0,IECalibrationDataFile.size()-4));
-        FileName.append("_");
+        string FileName="Efficiency_";
         FileName.append(std::to_string((int)DetectorAngles[t]));
-        FileName.append("_deg.log");
+        FileName.append("_");
+        FileName.append(IECalibrationDataFile.substr(0,IECalibrationDataFile.size()-4));
+        FileName.append(".log");
         out.SetFileName(FileName);
         out.FileChecker();
         out.SetPreDataString("Energy dEnergy Efficiency dEfficiency");
         out.WriteLog(CalculatedEfficiency[t]);
+        FileName="";
     }
 
     // // // // // // // // // // // // // // // // // // // // // // // // // // // //     

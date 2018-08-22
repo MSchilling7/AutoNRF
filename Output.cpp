@@ -46,28 +46,12 @@ void Output::SetDate()
 
 // ---------------------------------------------------------
 
-// string Output::makeFilePathPDF(string FitName, string FileName){
-//         string temp;
-//         temp.append("efit_");
-//         temp.append(FitName);
-//         temp.append("_");
-//         temp.append(FileName);
-//         temp.append("_");
-//         temp.append(Date);
-//         temp.append(".pdf");
-//         return temp;
-//     }
-
-// ---------------------------------------------------------
-
 void Output::SetFileName(string Name)
 {
     Name.erase(Name.end()-4,Name.end());
-    Name.append("_");
-    Name.append(Date);
     Name.append(".log");
-    Name="Output/"+Name;
-    FileName=Name;
+    FileName+=dir;
+    FileName+=Name;
 }
 
 // ---------------------------------------------------------
@@ -105,3 +89,4 @@ void Output::SetPreDataString(string line){
 }
 
 // ---------------------------------------------------------
+string Output::dir = "";

@@ -36,10 +36,10 @@ public:
     void SetDate();
     void SetFileName(string Name);
     void SetPreDataString(string line);
-//     string FilePathPDF(string FitName, string FileName);
     void WriteLog(vector<vector<double> >array);
     
     string GetDate(){return Date;};
+    static string dir;
     
 private:
     string Date;
@@ -48,29 +48,4 @@ private:
     ofstream LogFile;
 
 };
-
-// ------------------------------------------------------
-
-/*        
-        
-        
-    string merge_strings(string a, string b){
-        stringstream temp;
-        temp<<a<<b;
-        return temp.str();
-    }
-
-    string merge_strings(string a, string b, string c){
-        stringstream temp;
-        temp<<a<<b<<c;
-        return temp.str();
-    }
-    
-    
-    string merge_strings(string a, string b, string c, string d, string e){
-        stringstream temp;
-        temp<<a<<b<<c<<d<<e;
-        return temp.str();
-    }*/
-
 #endif

@@ -437,13 +437,18 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
             if(j*NFit/100/NumberOfThreads==ID+1 && percent[j]==false)
             {
                 Percent[NThread]=j;
+                unsigned int val=0;
+                for(unsigned int p=0;p<NumberOfThreads;p++)val+=Percent[p];
+                Percent[Percent.size()-1]=val/NumberOfThreads;
                 cout<<"\r";
-                for(unsigned int p=0;p<Percent.size();p++)
-                {
-                    cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
-                }
-                cout<<std::flush;
+                for(unsigned int p=0;p<NumberOfThreads;p++)
+                    {
+                        cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
+                    }
+                    cout<<"Total: "<<Percent[Percent.size()-1]<<"%";
+                    cout<<std::flush;
                 percent[j]=true;
+                break;
             }
         }
         TThread::UnLock();
@@ -493,7 +498,9 @@ void Flux::PlotPhotonFlux()
 {
     TFile* RFile=TFile::Open(rfile.c_str(),"update");
     RFile->cd("Flux");
-    TF1 Schiff("Schiff-Formula",Functions::Schiff, 0, EndPointParameter[0]*ENDPOINT*1000,3);
+    TF1 Schiff("Schiff-Formula",Functions::Schiff, 0, EndPointParameter[1]*ENDPOINT*1000,3);
+    TF1 SchiffUP("Schiff-Formula-Up",Functions::Schiff, 0, EndPointParameter[1]*ENDPOINT*1000,3);
+    TF1 SchiffDOWN("Schiff-Formula-Down",Functions::Schiff, 0, EndPointParameter[1]*ENDPOINT*1000,3);
     int datapoints_flux=(int) PhotonFluxData.size();
     Double_t xvec_flux[datapoints_flux];
     Double_t dxvec_flux[datapoints_flux];
@@ -531,6 +538,22 @@ void Flux::PlotPhotonFlux()
     Schiff.FixParameter(2,Parameter_Flux[4]);
     Schiff.SetLineColor(COLOR_FIT);
     Schiff.Write();
+
+    SchiffUP.SetLineWidth(1);
+    SchiffUP.FixParameter(0,ScaleParameter[0]+ScaleParameter[1]);
+    SchiffUP.FixParameter(1,EndPointParameter[1]);
+    SchiffUP.FixParameter(2,Parameter_Flux[4]);
+    SchiffUP.SetLineColor(COLOR_DFIT);
+    SchiffUP.SetLineStyle(7);
+    SchiffUP.Write();
+
+    SchiffDOWN.SetLineWidth(1);
+    SchiffDOWN.FixParameter(0,ScaleParameter[0]-ScaleParameter[1]);
+    SchiffDOWN.FixParameter(1,EndPointParameter[2]);
+    SchiffDOWN.FixParameter(2,Parameter_Flux[4]);
+    SchiffDOWN.SetLineColor(COLOR_DFIT);
+    SchiffDOWN.SetLineStyle(7);
+    SchiffDOWN.Write();
     
     TMultiGraph *mg = new TMultiGraph();
     string title="Photon Flux fitted via Schiff-Formula;Energy in keV;Photo Flux in a.u.";
@@ -538,15 +561,12 @@ void Flux::PlotPhotonFlux()
     mg->SetTitle(title.c_str());
     mg->Draw("AP");
     Schiff.Draw("same");
+    SchiffDOWN.Draw("same");
+    SchiffUP.Draw("same");
     
-    Output out;
-    out.SetDate();
-    string str="Photon_Flux_Fit_Plot_";
+    string str=Output::dir+"Flux_Fit_";
     str.append(FileName);
-    str.append("_");
-    str.append(out.GetDate());
     str.append(".pdf");
-    str="Output/"+str;
     fluxplot.SaveAs(str.c_str());
     cout<<"Photonflux Plot saved. ( "<<str<<" )"<<endl;
     
@@ -573,16 +593,16 @@ void Flux::PlotFitParameters()
     xhi=ceil(xhi);
     xhi=xhi/numberofdigits;
 
-    TH1D ScalingParameter("Scaling Parameter", "Scaling Parameter Distribution",100,xlow,xhi);
+    TH1D ScalingParameter("Scaling_Parameter", "Scaling Parameter Distribution",100,xlow,xhi);
     for(unsigned int i=0;i<FitParameterDistribution[0].size();i++)ScalingParameter.Fill(FitParameterDistribution[0][i]);
-    TF1 ParameterFuncGaus("Parameter Gaus",Functions::SkewNormal,xlow,xhi,4);
-    ParameterFuncGaus.FixParameter(1,ScalingParameter.GetMean(1));
-    ParameterFuncGaus.FixParameter(2,ScalingParameter.GetStdDev(1));
-    ParameterFuncGaus.FixParameter(3,0);
-    ScalingParameter.Fit("Parameter Gaus","Q");
+    TF1 ParameterFuncGausS("Parameter_Gaus_Scale",Functions::SkewNormal,xlow,xhi,4);
+    ParameterFuncGausS.FixParameter(1,ScalingParameter.GetMean(1));
+    ParameterFuncGausS.FixParameter(2,ScalingParameter.GetStdDev(1));
+    ParameterFuncGausS.FixParameter(3,0);
+    ScalingParameter.Fit(&ParameterFuncGausS,"Q");
     ScaleParameter.push_back(ScalingParameter.GetMean(1));
     ScaleParameter.push_back(ScalingParameter.GetStdDev(1));
-    ParameterFuncGaus.Write();
+    ParameterFuncGausS.Write();
 
     TCanvas ParameterHistScale("Scaling Parameter Histogram","Scaling Parameter Distribution",1600,900);
     ParameterHistScale.SetGrid();
@@ -590,53 +610,72 @@ void Flux::PlotFitParameters()
     ParameterHistScale.GetFrame()->SetBorderSize(12);
     ParameterHistScale.Write();
 
-    Output out;
-    out.SetDate();
     ScalingParameter.Draw("same");
-    ParameterFuncGaus.Draw("same");
-    string str="ParameterPlot_Scale_Flux_";
+    ParameterFuncGausS.Draw("same");
+    string str=Output::dir+"Flux_Scale_";
     str.append(FileName);
-    str.append("_");
-    str.append(out.GetDate());
     str.append(".pdf");
-    str="Output/"+str;
     ParameterHistScale.SaveAs(str.c_str());
     cout<<"Distribution of Scale saved. ( "<<str<<" )"<<endl;
-    
-    for(unsigned int i=0;i<4;i++)ParameterFuncGaus.ReleaseParameter(i);
     
     xlow=Parameter_Flux[2];
     xhi=Parameter_Flux[3];
     
-    numberofdigits=(int) pow(10,fabs(ceil(log10(FitParameterDistribution[1][0]))));;
-    xlow=xlow*numberofdigits;
-    xlow=floor(xlow);
-    xlow=xlow/numberofdigits;
+    // numberofdigits=(int) pow(10,fabs(ceil(log10(FitParameterDistribution[1][0]))));;
+    // xlow=xlow*numberofdigits;
+    // xlow=floor(xlow);
+    // xlow=xlow/numberofdigits;
     
     xhi=xhi*numberofdigits;
     xhi=ceil(xhi);
     xhi=xhi/numberofdigits;
     
-    TH1D Endpoint("End Point", "End Point Distribution",100,xlow,xhi);
+    TH1D Endpoint("End_Point", "End Point Distribution",100,xlow,xhi);
     for(unsigned int i=0;i<FitParameterDistribution[1].size();i++)Endpoint.Fill(FitParameterDistribution[1][i]);
     Endpoint.SetXTitle("Endpoint in MeV");
+    TF1 ParameterFuncGausE("Parameter_Gaus_Endpoint",Functions::LogNormal,xlow,xhi,4);
+    ParameterFuncGausE.SetParameters(1e3,1,xlow,1);
+    Endpoint.Fit(&ParameterFuncGausE,"Q","",Parameter_Flux[2]*1.05,Parameter_Flux[3]*0.95);
+    ParameterFuncGausE.Write();
+
+
 
     TCanvas ParameterHistEndpoint("End-Point Parameter Histogram","End-Point Parameter Distribution",1600,900);
     ParameterHistEndpoint.SetGrid();
     ParameterHistEndpoint.GetFrame()->SetFillColor(21);
     ParameterHistEndpoint.GetFrame()->SetBorderSize(12);
     Endpoint.Draw("same");
+    ParameterFuncGausE.Draw("same");
 
-    str="ParameterPlot_EndPoint_Flux_";
+    str=Output::dir+"Flux_EndPoint_";
     str.append(FileName);
-    str.append("_");
-    str.append(out.GetDate());
     str.append(".pdf");
-    str="Output/"+str;
     ParameterHistEndpoint.SaveAs(str.c_str());
     cout<<"Distribution of End-Point saved. ( "<<str<<" )"<<endl;
     
-    EndPointParameter.push_back(10);
+    EndPointParameter.push_back(ParameterFuncGausE.GetMaximumX(xlow,xhi));
+    cout<<xlow<<endl;
+    for(unsigned int i =0;i<=100;i++)
+    {
+        if(Endpoint.GetBinContent(i)!=0)
+        {
+            xlow=Endpoint.GetBinCenter(i);
+            break;
+        }
+    }
+    cout<<xlow<<endl;
+    cout<<xhi<<endl;
+    for(unsigned int i =0;i<=2000;i++)
+    {
+        if(ParameterFuncGausE.Integral(0,i/2000*xhi*2)/ParameterFuncGausE.Integral(0,xhi*2)>=0.683)
+        {
+            xhi=Endpoint.GetBinCenter(i);
+            break;
+        }
+    }
+    cout<<xhi<<endl;
+    EndPointParameter.push_back(xhi);
+    EndPointParameter.push_back(xlow);
 
     ParameterHistEndpoint.Write();
 

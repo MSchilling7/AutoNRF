@@ -198,6 +198,7 @@ double Functions::Schiff(double *k,double *par)
   }
 
 // ---------------------------------------------------------    
+
 double Functions::SkewNormal(double* x,double* par)
 {
   double scale=par[0];
@@ -210,9 +211,42 @@ double Functions::SkewNormal(double* x,double* par)
   double erf=0.5*(1+TMath::Erf(temp*skew*1/TMath::Sqrt(2)));
   return scale*2/sigma*normaldist*erf;
 }
-// ---------------------------------------------------------
-double Functions::LogNormal_Gamma_Dist(double *x,double *par)
+
+// --------------------------------------------------------- 
+
+double Functions::LogNormal(double *x,double*par)
 {
-return (par[6]*TMath::LogNormal(x[0],par[2],par[1],par[3])+par[7]*TMath::GammaDist(x[0],par[4],par[1],par[5]))*par[0];
+  // https://en.wikipedia.org/wiki/Log-normal_distribution
+  double scale=par[0];
+  double sigma=par[1];
+  double mu=par[2];
+  double x0=par[3];
+
+  double val=0;
+  val=scale*TMath::LogNormal(x[0],sigma,mu,x0);
+  return val;
 }
-// ---------------------------------------------------------
+
+// --------------------------------------------------------- 
+
+double Functions::Normal2(double* x,double* par)
+{
+  double scale=par[0];
+  double mu=par[1];
+  double sigma=par[2];
+  double sigma2=par[3];
+
+  double gaus1 = TMath::Gaus(x[0],mu,sigma);
+  double gaus2 = TMath::Gaus(x[0],mu,sigma2);
+
+  double val=0;
+
+  if(x[0]<mu)val=scale*gaus1;
+  if(x[0]>mu)val=scale*gaus2;
+
+  return val;
+
+
+}
+
+// --------------------------------------------------------- 

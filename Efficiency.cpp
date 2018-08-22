@@ -111,7 +111,7 @@ void Efficiency::FitEfficiency()
         }
     }
     Threads.resize(NumberOfThreads);
-    for(unsigned int i = 0;i<NumberOfThreads;i++)Percent.push_back(0);
+    for(unsigned int i = 0;i<NumberOfThreads+1;i++)Percent.push_back(0);
     for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsFinished.push_back(false);
     for(unsigned int i = 0 ; i<NumberOfThreads ; i++)ThreadIsInitialized.push_back(false);
     if (NumberOfThreads > 1)
@@ -204,7 +204,7 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
     Data=GetEfficiencyDataArray();
     Par=GetFittedParameters();
     unsigned int NumberofFits=NFit/NumberOfThreads;
-    for(unsigned int i=0;i<NumberofFits;i++)
+	for(unsigned int i=0;i<NumberofFits;i++)
     {
         for(unsigned int NDetector=0;NDetector<DetectorAngles.size();NDetector++)
         {
@@ -237,11 +237,15 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
                     if(j*NFit/100/NumberOfThreads==ID+1 && percent[j]==false)
                     {
                         Percent[NThread]=j;
+                        unsigned int val=0;
+                        for(unsigned int p=0;p<NumberOfThreads;p++)val+=Percent[p];
+                        Percent[Percent.size()-1]=val/NumberOfThreads;
                         cout<<"\r";
-                        for(unsigned int p=0;p<Percent.size();p++)
+                        for(unsigned int p=0;p<NumberOfThreads;p++)
                             {
                                 cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
                             }
+                            cout<<"Total: "<<Percent[Percent.size()-1]<<"%";
                             cout<<std::flush;
                         percent[j]=true;
                         break;
@@ -293,7 +297,6 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         {
             string dirname="Efficiency/Detector ";
             dirname.append(std::to_string((int)DetectorAngles[t]));
-            RFile->mkdir(dirname.c_str());
             RFile->cd(dirname.c_str());
             double xlow=TMath::MinElement(NFit,&FitParameterDistribution[t][0]);
             double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[t][0]);
@@ -327,19 +330,14 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             FitParameterMean=ScalingParameter.GetMean(1);
             FitParameterSigma=ScalingParameter.GetStdDev(1);
 
-
-            Output out;
-            out.SetDate();
             ScalingParameter.Draw("same");
             ParameterFuncGaus.Draw("same");
-            string str="ParameterPlot_Scale";
+            string str=Output::dir+"Efficiency_Scale_";
             str.append(FileName);
             str.append("_");
             str.append(std::to_string((int)DetectorAngles[t]));
-            str.append("_deg_");
-            str.append(out.GetDate());
+            str.append("_deg");
             str.append(".pdf");
-            str="Output/"+str;
             ParameterHist.SaveAs(str.c_str());
             cout<<"Distribution of Scale saved. ( "<<str<<" )"<<endl;
             ParameterHist.Write();
@@ -355,7 +353,6 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
     void Efficiency::PlotEFunc()
     {
         TFile* RFile=TFile::Open(rfile.c_str(),"update");
-        RFile->cd("Efficiency");
 
         TF1 EFunction("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
         TF1 EFunctionUP("EFunction",Functions::knoll, 0, 10000,NumberofParameters);
@@ -483,16 +480,11 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         legend->Draw();
         
 
-        Output out;
-        out.SetDate();
-        string str="Efficiency_Fit_Plot_";
-        str.append(FileName);
-        str.append("_");
+        string str=Output::dir+"Efficiency_Fit_";
         str.append(std::to_string((int)DetectorAngles[t]));
-        str.append("_deg_");
-        str.append(out.GetDate());
+        str.append("_");
+        str.append(FileName);
         str.append(".pdf");
-        str="Output/"+str;
         efficiencyplot.SaveAs(str.c_str());
         cout<<"Efficiency of Detector under "<<(int)DetectorAngles[t]<< "deg saved. ( "<<str<<" )"<<endl;
         efficiencyplot.Write();
