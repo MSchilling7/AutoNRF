@@ -13,13 +13,17 @@
 #include <string>
 #include <sstream> 
 #include <vector>
+#include <sstream>
+#include <iterator>  
 
+using std::istringstream;
 using std::string;
 using std::stringstream;
 using std::vector;
 using std::ofstream;
 using std::cout;
 using std::endl;
+
 
 class Output
 {
@@ -37,6 +41,7 @@ public:
     void SetFileName(string Name);
     void SetPreDataString(string line);
     void WriteLog(vector<vector<double> >array);
+    void WriteLog(vector<double>array);
     
     string GetDate(){return Date;};
     static string dir;

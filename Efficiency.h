@@ -17,6 +17,7 @@
 #include <TGraphErrors.h>
 #include <TLegend.h>
 #include <TFile.h>
+#include <TLine.h>
 #include <TFrame.h>
 
 using std::vector;
@@ -27,7 +28,6 @@ using std::string;
 #include "DataReader.h"
 
 #define YSCALE 1.1
-#define SIGMA 10
 #define ERRORBARS true
 
 #define COLOR_FIT 2

@@ -44,7 +44,6 @@ void DataReader::SetInputParameter()
     double a2;
     double a3;
     double a4;
-    double a5;
     
     double E0max;
     double E0min;
@@ -80,8 +79,7 @@ void DataReader::SetInputParameter()
                     a1                    >> 
                     a2                    >> 
                     a3                    >> 
-                    a4                    >>
-                    a5             ;
+                    a4                    ;
                     
                 DataFileline.push_back(ScourceFile);                    //0
                 DataFileline.push_back(ECalFile);                       //1
@@ -93,7 +91,6 @@ void DataReader::SetInputParameter()
                 tempVector.push_back(a2);       //4
                 tempVector.push_back(a3);       //5
                 tempVector.push_back(a4);       //6
-                tempVector.push_back(a5);       //7
                 fitParameterarray_Efficency.push_back(tempVector);
                 tempVector.clear();
                 for(;;)
@@ -331,6 +328,7 @@ void DataReader::SetSourceData()
                         tempVector.push_back(efwhmD);
                         tempVector.push_back(volumeD);
                         tempVector.push_back(evolumeD);
+                        tempVector.push_back(tailleftD);
                         tempVector.push_back(etailleftD);
                         
                         temp2DVector.push_back(tempVector);
@@ -384,7 +382,8 @@ void DataReader::SetSourceData()
                                 };
                             }
                             istringstream buffer(line);
-                            buffer >>   energyD  >> 
+                            buffer >>
+                            energyD  >> 
                             eenergyD  >> 
                             fwhmD  >> 
                             efwhmD  >> 

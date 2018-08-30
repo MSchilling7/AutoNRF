@@ -231,22 +231,73 @@ double Functions::LogNormal(double *x,double*par)
 
 double Functions::Normal2(double* x,double* par)
 {
-  double scale=par[0];
-  double mu=par[1];
-  double sigma=par[2];
-  double sigma2=par[3];
+  double mu=par[0];
+  double sigma=par[1];
+  double sigma2=par[2];
 
   double gaus1 = TMath::Gaus(x[0],mu,sigma);
   double gaus2 = TMath::Gaus(x[0],mu,sigma2);
 
   double val=0;
 
-  if(x[0]<mu)val=scale*gaus1;
-  if(x[0]>mu)val=scale*gaus2;
+  if(x[0]<mu)val=gaus1;
+  if(x[0]>mu)val=gaus2;
 
   return val;
 
 
+}
+
+// --------------------------------------------------------- 
+
+void Functions::ShortestCoverage(vector<double> param_array,double boundary[2])
+{
+  const unsigned int nq =1000; 
+  Double_t xq[nq];  // position where to compute the quantiles in [0,1]
+  Double_t yq[nq];  // array to contain the quantiles
+  for (unsigned int i=0;i<nq;i++) xq[i] = double(i+1)/nq;
+  
+  double xlow=TMath::MinElement(param_array.size(),&param_array[0]);
+  double xhi=TMath::MaxElement(param_array.size(),&param_array[0]);
+  
+  TH1D hist("","",nq,xlow,xhi);
+  for(unsigned int i=0;i<param_array.size();i++)
+  {
+    hist.Fill(param_array[i]);
+  }
+  hist.GetQuantiles(nq,yq,xq);
+
+  vector<vector<double>> temp;
+
+  for(unsigned int i=0;i<nq;i++)
+  {
+    for(unsigned int j=0;j<i;j++)
+   {
+      if(xq[i]-xq[j]==0.683)
+      {
+        vector<double> sigma;
+        sigma.push_back(xq[i]);
+        sigma.push_back(yq[i]);
+        sigma.push_back(xq[j]);
+        sigma.push_back(yq[j]);
+        temp.push_back(sigma);
+        sigma.clear();
+      }
+    }
+  }
+  double dist=xhi-xlow;
+  boundary[0]=xlow;
+  boundary[1]=xhi;
+  
+  for(unsigned int i =0;i<temp.size();i++)
+  {
+    if(dist>temp[i][1]-temp[i][3])
+    {
+      dist=temp[i][1]-temp[i][3];
+      boundary[0]=temp[i][3];
+      boundary[1]=temp[i][1];
+    }
+  }
 }
 
 // --------------------------------------------------------- 

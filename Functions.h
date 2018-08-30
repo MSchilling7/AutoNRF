@@ -12,6 +12,7 @@
 #include <vector>
 #include <TThread.h>
 #include <TF1.h>
+#include <TH1.h>
 #include <TRandom3.h>
 #include <TGraphErrors.h>
 
@@ -44,8 +45,10 @@ public:
     static double SkewNormal(double *x,double *par);
     static double LogNormal(double*x,double*par);
     static double Normal2(double*x,double*par);
+
+    static void ShortestCoverage(vector<double> param_array,double boundary[2]);
     
-    
+
     vector<int> Maching2Doubles(vector< vector <double> > a,int anumber,const char aCorR, vector<vector <double> > b, int bnumber,const char bCorR);
     double relError2(vector <double> a,int posVal, int posError);
 private:

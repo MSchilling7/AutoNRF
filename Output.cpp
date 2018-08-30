@@ -47,10 +47,11 @@ void Output::SetDate()
 // ---------------------------------------------------------
 
 void Output::SetFileName(string Name)
-{
+{   
+    FileName="";
     Name.erase(Name.end()-4,Name.end());
     Name.append(".log");
-    FileName+=dir;
+    FileName=dir;
     FileName+=Name;
 }
 
@@ -58,8 +59,10 @@ void Output::SetFileName(string Name)
 
 void Output::WriteLog(vector<vector<double> >array){
     LogFile.open(FileName.c_str(),std::ofstream::app);
-    for(unsigned int i=0;i<array.size();i++){
-        for(unsigned int j=0;j<array[i].size();j++){
+    for(unsigned int i=0;i<array.size();i++)
+    {
+        for(unsigned int j=0;j<array[i].size();j++)
+        {
             LogFile  << std::setw(20)<<array[i][j];
         }
         LogFile<<std::endl;
@@ -70,19 +73,27 @@ void Output::WriteLog(vector<vector<double> >array){
 
 // ---------------------------------------------------------
 
-void Output::SetPreDataString(string line){
-    string str;
+void Output::WriteLog(vector<double>array){
     LogFile.open(FileName.c_str(),std::ofstream::app);
-    LogFile  <<  "//";
-    for(unsigned int i =0;i<line.length();i++){
-        if(line[i]==' ' || line[i]==',' || line[i]==';'){
-            LogFile<<std::setw(20)<<line.substr(0,i);
-            line.erase(line.begin(),line.begin()+i);
-        }
-        if(i==line.length()-1)LogFile<<std::setw(20)<<line;
+    for(unsigned int i=0;i<array.size();i++)
+    {
+            LogFile  << std::setw(20)<<array[i];
     }
+    LogFile<<endl;
+    LogFile.close();
+    cout<<"Log was written to "<<FileName<<endl;
+}
+
+// ---------------------------------------------------------
+
+void Output::SetPreDataString(string line){
+    LogFile.open(FileName.c_str(),std::ofstream::app);
+    LogFile  <<  "//"<<std::setw(18);
     
-    
+    istringstream iss(line);
+    vector<string> words(std::istream_iterator<std::string>{iss},std::istream_iterator<std::string>());
+
+    for(unsigned int i =0;i<words.size();i++)LogFile<<words[i]<<std::setw(20);
     LogFile<<std::endl;
     LogFile.close();
     

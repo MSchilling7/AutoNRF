@@ -297,6 +297,7 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         {
             string dirname="Efficiency/Detector ";
             dirname.append(std::to_string((int)DetectorAngles[t]));
+            RFile->mkdir(dirname.c_str());
             RFile->cd(dirname.c_str());
             double xlow=TMath::MinElement(NFit,&FitParameterDistribution[t][0]);
             double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[t][0]);
@@ -323,15 +324,27 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             
             TH1I ScalingParameter(names.c_str(),title.c_str(),100,xlow,xhi);
             for(unsigned int i=0;i<FitParameterDistribution[t].size();i++)ScalingParameter.Fill(FitParameterDistribution[t][i]);
-            TF1 ParameterFuncGaus("Parameter Gaus","[0]*1/(sqrt(2*TMath::Pi()*[2]**2))*exp(-0.5*((x-[1])/[2])**2)",xlow,xhi);
-            ParameterFuncGaus.FixParameter(1,ScalingParameter.GetMean(1));
-            ParameterFuncGaus.FixParameter(2,ScalingParameter.GetStdDev(1));
-            ScalingParameter.Fit(&ParameterFuncGaus,"Q");
-            FitParameterMean=ScalingParameter.GetMean(1);
-            FitParameterSigma=ScalingParameter.GetStdDev(1);
+            double max=ScalingParameter.GetMaximum();
+            ScalingParameter.SetMaximum(YSCALE*max);
+            double boundary[2]={0,0};
 
-            ScalingParameter.Draw("same");
-            ParameterFuncGaus.Draw("same");
+
+            Functions::ShortestCoverage(FitParameterDistribution[t],boundary);
+
+
+            TLine b_lower(boundary[0],0,boundary[0],ScalingParameter.GetMaximum());
+            TLine b_upper(boundary[1],0,boundary[1],ScalingParameter.GetMaximum());
+
+            b_lower.SetLineColor(2);
+            b_lower.SetLineWidth(2);
+
+            b_upper.SetLineColor(2);
+            b_upper.SetLineWidth(2);
+
+            ScalingParameter.Draw("");
+            b_lower.Draw("same");
+            b_upper.Draw("same");
+
             string str=Output::dir+"Efficiency_Scale_";
             str.append(FileName);
             str.append("_");
@@ -342,8 +355,8 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             cout<<"Distribution of Scale saved. ( "<<str<<" )"<<endl;
             ParameterHist.Write();
 
-            Parameter_All[t][0]=FitParameterMean;
-            Parameter_All[t].push_back(FitParameterSigma);
+            Parameter_All[t][0]=ScalingParameter.GetBinCenter(ScalingParameter.GetMaximumBin());
+            Parameter_All[t].insert(Parameter_All[t].begin()+1,{boundary[0],boundary[1]});
         }
         RFile->Write();
         // RFile->Close();
@@ -361,7 +374,6 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         {
             string dirname="Efficiency/Detector ";
             dirname.append(std::to_string((int)DetectorAngles[t]));
-            RFile->mkdir(dirname.c_str());
             RFile->cd(dirname.c_str());
             int datapoints_ecal=(int) EfficiencyDataArray[t].size();
             int datapoints_sim=(int) simulationData[t].size();
@@ -429,10 +441,10 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
 
             names="Efficiency Function ";
             names+=std::to_string((int)DetectorAngles[t]);
-
-            for(unsigned int i=0;i<NumberofParameters;i++)
+            EFunction.SetParameter(0,Parameter_All[t][0]);
+            for(unsigned int i=1;i<NumberofParameters;i++)
             {
-                EFunction.SetParameter(i,Parameter_All[t][i]);
+                EFunction.SetParameter(i,Parameter_All[t][i+2]);
             }
             EFunction.SetLineWidth(1);
             EFunction.SetLineColor(COLOR_FIT);
@@ -440,13 +452,13 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             EFunction.SetName(names.c_str());
         
             if(ERRORBARS)
-            {
-                EFunctionUP.SetParameter(0,Parameter_All[t][0]+SIGMA*FitParameterSigma);
-                EFunctionDOWN.SetParameter(0,Parameter_All[t][0]-SIGMA*FitParameterSigma);
+            {   
+                EFunctionUP.SetParameter(0,Parameter_All[t][1]);
+                EFunctionDOWN.SetParameter(0,Parameter_All[t][2]);
                 for(unsigned int i=1;i<NumberofParameters;i++)
                 {
-                    EFunctionUP.SetParameter(i,Parameter_All[t][i]);
-                    EFunctionDOWN.SetParameter(i,Parameter_All[t][i]);
+                    EFunctionUP.SetParameter(i,Parameter_All[t][i+2]);
+                    EFunctionDOWN.SetParameter(i,Parameter_All[t][i+2]);
                 }
                 EFunctionUP.SetLineColor(COLOR_DFIT);
                 EFunctionUP.SetLineStyle(7);
@@ -454,15 +466,13 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
                 EFunctionDOWN.SetLineColor(COLOR_DFIT);
                 EFunctionDOWN.SetLineStyle(7);
                 EFunctionDOWN.SetLineWidth(1);
-                string errorstring=std::to_string(SIGMA);
-                errorstring+=" Sigma-Range";
-                EFunctionUP.SetName(errorstring.c_str());
+                EFunctionUP.SetName("1-Sigma-Range");
             }
 
         TMultiGraph *mg = new TMultiGraph();
         mg->Add(&efficiencysim);
         mg->Add(&efficiencydata);
-        string title="Efficiency fitted via Knoll-Model";
+        string title="Efficiency fitted via Knoll-Model ";
         title.append(std::to_string((int) DetectorAngles[t]));
         title.append(" deg;Energy in keV;Efficiency in a.u.;");
         mg->SetTitle(title.c_str());
@@ -491,10 +501,6 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         EFunction.Write();
         efficiencydata.Write();
         efficiencysim.Write();
-
-
-        Parameter_All[t].insert(Parameter_All[t].begin()+1,1,Parameter_All[t][NumberofParameters]);
-        Parameter_All[t].pop_back();
     }
     RFile->Write();
     // RFile.Close();

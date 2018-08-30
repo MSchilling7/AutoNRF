@@ -49,6 +49,7 @@ using std::string;
 #define COLOR_FIT 2
 #define COLOR_DFIT 4
 #define ENDPOINT 1.5
+#define EMIN 2000
 
 
 class Flux

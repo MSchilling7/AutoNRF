@@ -362,6 +362,20 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         out.WriteLog(CalculatedEfficiency[t]);
         FileName="";
     }
+    vector<vector<double> > Efficiency_Parameters=effi.GetFittedParameters();
+
+    for(unsigned int t=0;t<DetectorAngles.size();t++)
+    {
+        string FileName="Efficiency_";
+        FileName.append(std::to_string((int)DetectorAngles[t]));
+        FileName.append("_FitParameters");
+        FileName.append(".log");
+        out.SetFileName(FileName);
+        out.FileChecker();
+        out.SetPreDataString("Scale ScaleLOW ScaleHIGH a0 a1 a2 a3 a4");
+        out.WriteLog(Efficiency_Parameters[t]);
+        FileName="";
+    }
 
     // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
     // // 

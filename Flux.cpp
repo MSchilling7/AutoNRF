@@ -132,9 +132,9 @@ void Flux::CorrectingPeakArea()
         minlist2=func.Maching2Doubles(Inelastic,E_FINAL,'C',ExperimentalData[t],0,'C');
         minlist3=func.Maching2Doubles(Inelastic,E_FINAL,'C',Elastic,EX,'C');
     // Feeding Correction of Peak Areas (Top-Down)
+        double Volume, dVolume;
         for(unsigned int i=0;i<Inelastic.size();i++)
         {
-            double Volume, dVolume;
             if(DetectorAngles[t] == 90)Volume=Inelastic[i][BRANCHING]*calcEfficiency[t][minlist2[i]][2]/calcEfficiency[t][minlist[i]][2]*Inelastic[i][W90]/Elastic[minlist3[i]][W90]*ExperimentalData[t][minlist[i]][4];
             if(DetectorAngles[t] == 130)Volume=Inelastic[i][BRANCHING]*calcEfficiency[t][minlist2[i]][2]/calcEfficiency[t][minlist[i]][2]*Inelastic[i][W130]/Elastic[minlist3[i]][W130]*ExperimentalData[t][minlist[i]][4];
             
@@ -151,7 +151,6 @@ void Flux::CorrectingPeakArea()
         for(unsigned int i=(unsigned int)Inelastic.size();0<i;--i)
         {
             unsigned int j=i-1;
-            double Volume, dVolume;
             Volume=ExperimentalData[t][minlist2[j]][4]-Inelastic[j][CORRECT_VOLUME];
             dVolume=sqrt(ExperimentalData[t][minlist2[j]][5]*ExperimentalData[t][minlist2[j]][5]+Inelastic[j][CORRECT_DVOLUME]*Inelastic[j][CORRECT_DVOLUME]);
             
@@ -206,14 +205,14 @@ void Flux::CalculateFlux()
     vector<vector<vector<double> > >tempVector;
     vector <int> minlist;
     double Area;
-    double dArea;
+    double dAreaLow,dAreaHigh;
     PhotonFluxData.resize(ExperimentalData[0].size());
-    for(unsigned int i=0;i<PhotonFluxData.size();i++)PhotonFluxData[i].resize(4);
+    for(unsigned int i=0;i<PhotonFluxData.size();i++)PhotonFluxData[i].resize(5);
     tempVector.resize(DetectorAngles.size());
     for(unsigned int i=0;i<tempVector.size();i++)
         {
             tempVector[i].resize(PhotonFluxData.size());
-            for(unsigned int j=0;j<tempVector[i].size();j++)tempVector[i][j].resize(4);
+            for(unsigned int j=0;j<tempVector[i].size();j++)tempVector[i][j].resize(5);
         }
 
 
@@ -254,18 +253,26 @@ void Flux::CalculateFlux()
                 }
 
 
-                dArea=Area*
+                dAreaLow=Area*
                 sqrt(
                     func.relError2(Parameter_Flux,5,6)+
                     func.relError2(ICS[j],2,3)
                     +func.relError2(calcEfficiency[t][i],2,3)
                     );
+
+                dAreaHigh=Area*
+                sqrt(
+                    func.relError2(Parameter_Flux,5,6)+
+                    func.relError2(ICS[j],2,3)
+                    +func.relError2(calcEfficiency[t][i],2,4)
+                    );
                 
                 tempVector[t][i][2]=Area;
-                tempVector[t][i][3]=dArea;
-                // cout<<std::setw(15)<<FluxParameter[j][2]<<std::setw(15)<<FluxParameter[j][3]<<std::setw(15)<<Area<<std::setw(15)<<dArea<<endl;
+                tempVector[t][i][3]=dAreaLow;
+                tempVector[t][i][4]=dAreaHigh;
+                // cout<<"PENIS PENIS"<<endl;
                 for(unsigned k=0;k<tempVector[t][i].size();k++)cout<<std::setw(15)<<tempVector[t][i][k];
-                    cout<<endl;
+                cout<<endl;
             }
         }
         cout<<endl<<"Check if the Photonflux from the different Detectors agree within the uncertainty!"<<endl<<endl;
@@ -275,10 +282,12 @@ void Flux::CalculateFlux()
             {
                 PhotonFluxData[j][2]+=tempVector[i][j][2];
                 PhotonFluxData[j][3]+=tempVector[i][j][3]*tempVector[i][j][3];
+                PhotonFluxData[j][4]+=tempVector[i][j][4]*tempVector[i][j][4];
             }
         }
         for(unsigned int i=0;i<PhotonFluxData.size();i++)PhotonFluxData[i][2]=PhotonFluxData[i][2]/ (double) DetectorAngles.size();
         for(unsigned int i=0;i<PhotonFluxData.size();i++)PhotonFluxData[i][3]=sqrt(PhotonFluxData[i][3])/(double) DetectorAngles.size();   
+        for(unsigned int i=0;i<PhotonFluxData.size();i++)PhotonFluxData[i][4]=sqrt(PhotonFluxData[i][4])/(double) DetectorAngles.size();   
     }   
 
 // ---------------------------------------------------------
@@ -288,24 +297,37 @@ void Flux::CalculateFlux()
         Functions func;
         vector<double> tempVector;
         vector<vector<double> >temp2DVector;
-        unsigned int NumberofParameters;
-            NumberofParameters = 6;
-            TF1 EfficiencyFunction("EfficiencyFunction",Functions::knoll, 0, 10000,NumberofParameters);
+        unsigned int NumberofParameters = 6;
+        TF1 EfficiencyFunction("EfficiencyFunction",Functions::knoll, 0, 10000,NumberofParameters);
+        TF1 EfficiencyFunctionLOW("EfficiencyFunction",Functions::knoll, 0, 10000,NumberofParameters);
+        TF1 EfficiencyFunctionHIGH("EfficiencyFunction",Functions::knoll, 0, 10000,NumberofParameters);
 
         for(unsigned int t=0;t<DetectorAngles[t];t++)
         {
-            double Scale=Parameter_Efficiency[t][0];
-            double dScale=Parameter_Efficiency[t][1];
+            double ScaleLow=Parameter_Efficiency[t][1];
+            double ScaleHigh=Parameter_Efficiency[t][2];
             Parameter_Efficiency[t].erase(Parameter_Efficiency[t].begin()+1);
-        for(unsigned int i=0;i<=NumberofParameters;i++){EfficiencyFunction.SetParameter(i,Parameter_Efficiency[t][i]);}
+            Parameter_Efficiency[t].erase(Parameter_Efficiency[t].begin()+1);
+            for(unsigned int i=0;i<=NumberofParameters;i++){EfficiencyFunction.SetParameter(i,Parameter_Efficiency[t][i]);}
+            for(unsigned int i=1;i<=NumberofParameters;i++){EfficiencyFunctionLOW.SetParameter(i,Parameter_Efficiency[t][i]);}
+            for(unsigned int i=1;i<=NumberofParameters;i++){EfficiencyFunctionHIGH.SetParameter(i,Parameter_Efficiency[t][i]);}
+            EfficiencyFunctionLOW.SetParameter(0,ScaleLow);
+            EfficiencyFunctionHIGH.SetParameter(0,ScaleHigh);
+
             for(unsigned int i=0;i<ExperimentalData[t].size();i++)
             {
                 double val=EfficiencyFunction.Eval(ExperimentalData[t][i][0]);
-                double dval=val*sqrt(func.relError2(ExperimentalData[t][i],4,5)+sqrt(dScale*dScale/(Scale*Scale)));
+                double vallow=fabs(val-EfficiencyFunctionLOW.Eval(ExperimentalData[t][i][0]));
+                vallow=vallow*vallow/(val*val)+func.relError2(ExperimentalData[t][i],4,5);
+                vallow=val*sqrt(vallow);
+                double valhigh=fabs(val-EfficiencyFunctionHIGH.Eval(ExperimentalData[t][i][0]));
+                valhigh=valhigh*valhigh/(val*val)+func.relError2(ExperimentalData[t][i],4,5);
+                valhigh=val*sqrt(valhigh);
                 tempVector.push_back(ExperimentalData[t][i][0]);
                 tempVector.push_back(ExperimentalData[t][i][1]);
                 tempVector.push_back(val);
-                tempVector.push_back(dval);
+                tempVector.push_back(vallow);
+                tempVector.push_back(valhigh);
 
                 temp2DVector.push_back(tempVector);
                 tempVector.clear();
@@ -421,37 +443,44 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
     // TheFitter.Config().SetMinimizer("Minuit2","Combined");
     TheFitter.SetFunction(FitFunction);
     TheFitter.Config().MinimizerOptions().SetPrintLevel(0);
+
+    TF1 rand_func[PhotonFluxData.size()];
+    for(unsigned int j=0;j<PhotonFluxData.size();j++)
+    {
+        rand_func[j]=TF1("",Functions::Normal2,0.5*(PhotonFluxData[j][2]-PhotonFluxData[j][3]),1.5*(PhotonFluxData[j][2]+PhotonFluxData[j][4]),3);
+        rand_func[j].SetParameters(PhotonFluxData[j][2],PhotonFluxData[j][3],PhotonFluxData[j][4]);            
+    }
     for(unsigned int i=0;i<NFit/NumberOfThreads;i++)
     {
 
         for(unsigned int j=0;j<PhotonFluxData.size();j++)
         {
             xvec_flux[j]=random.Gaus(PhotonFluxData[j][0],PhotonFluxData[j][1]);
-            yvec_flux[j]=random.Gaus(PhotonFluxData[j][2],PhotonFluxData[j][3]);
+            yvec_flux[j]=rand_func[j].GetRandom();
         }
         TGraph DataGraph((const Int_t)datapoints_flux,xvec_flux,yvec_flux);
         TThread::Lock();
         unsigned int ID = i;
-        for(unsigned int j=1;j<101;j++)
-        {
-            if(j*NFit/100/NumberOfThreads==ID+1 && percent[j]==false)
-            {
-                Percent[NThread]=j;
-                unsigned int val=0;
-                for(unsigned int p=0;p<NumberOfThreads;p++)val+=Percent[p];
-                Percent[Percent.size()-1]=val/NumberOfThreads;
-                cout<<"\r";
-                for(unsigned int p=0;p<NumberOfThreads;p++)
-                    {
-                        cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
-                    }
-                    cout<<"Total: "<<Percent[Percent.size()-1]<<"%";
-                    cout<<std::flush;
-                percent[j]=true;
-                break;
-            }
-        }
         TThread::UnLock();
+                for(unsigned int j=1;j<101;j++)
+                {
+                    if(j*NFit/100/NumberOfThreads==ID+1 && percent[j]==false)
+                    {
+                        Percent[NThread]=j;
+                        unsigned int val=0;
+                        for(unsigned int p=0;p<NumberOfThreads;p++)val+=Percent[p];
+                        Percent[Percent.size()-1]=val/NumberOfThreads;
+                        cout<<"\r";
+                        for(unsigned int p=0;p<NumberOfThreads;p++)
+                            {
+                                cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
+                            }
+                            cout<<"Total: "<<Percent[Percent.size()-1]<<"%";
+                            cout<<std::flush;
+                        percent[j]=true;
+                        break;
+                    }
+                }
 
 
         ROOT::Fit::BinData d;
@@ -498,9 +527,9 @@ void Flux::PlotPhotonFlux()
 {
     TFile* RFile=TFile::Open(rfile.c_str(),"update");
     RFile->cd("Flux");
-    TF1 Schiff("Schiff-Formula",Functions::Schiff, 0, EndPointParameter[1]*ENDPOINT*1000,3);
-    TF1 SchiffUP("Schiff-Formula-Up",Functions::Schiff, 0, EndPointParameter[1]*ENDPOINT*1000,3);
-    TF1 SchiffDOWN("Schiff-Formula-Down",Functions::Schiff, 0, EndPointParameter[1]*ENDPOINT*1000,3);
+    TF1 Schiff("Schiff-Formula",Functions::Schiff, EMIN, EndPointParameter[0]*1000,3);
+    TF1 SchiffDOWN("Schiff-Formula-Down",Functions::Schiff, EMIN, EndPointParameter[1]*1000,3);
+    TF1 SchiffUP("Schiff-Formula-Up",Functions::Schiff, EMIN, EndPointParameter[2]*1000,3);
     int datapoints_flux=(int) PhotonFluxData.size();
     Double_t xvec_flux[datapoints_flux];
     Double_t dxvec_flux[datapoints_flux];
@@ -531,6 +560,7 @@ void Flux::PlotPhotonFlux()
     fluxdata.SetMinimum(1e-5);
     fluxdata.GetYaxis()->SetNdivisions(505);   //Sets number of Ticks
     fluxdata.GetYaxis()->SetDecimals(kTRUE); //Sets same digits
+    fluxdata.GetXaxis()->SetRangeUser(EMIN,EndPointParameter[3]*1.2);
     
     Schiff.SetLineWidth(1);
     Schiff.FixParameter(0,ScaleParameter[0]);
@@ -540,16 +570,16 @@ void Flux::PlotPhotonFlux()
     Schiff.Write();
 
     SchiffUP.SetLineWidth(1);
-    SchiffUP.FixParameter(0,ScaleParameter[0]+ScaleParameter[1]);
-    SchiffUP.FixParameter(1,EndPointParameter[1]);
+    SchiffUP.FixParameter(0,ScaleParameter[2]);
+    SchiffUP.FixParameter(1,EndPointParameter[2]);
     SchiffUP.FixParameter(2,Parameter_Flux[4]);
     SchiffUP.SetLineColor(COLOR_DFIT);
     SchiffUP.SetLineStyle(7);
     SchiffUP.Write();
 
     SchiffDOWN.SetLineWidth(1);
-    SchiffDOWN.FixParameter(0,ScaleParameter[0]-ScaleParameter[1]);
-    SchiffDOWN.FixParameter(1,EndPointParameter[2]);
+    SchiffDOWN.FixParameter(0,ScaleParameter[1]);
+    SchiffDOWN.FixParameter(1,EndPointParameter[1]);
     SchiffDOWN.FixParameter(2,Parameter_Flux[4]);
     SchiffDOWN.SetLineColor(COLOR_DFIT);
     SchiffDOWN.SetLineStyle(7);
@@ -561,8 +591,8 @@ void Flux::PlotPhotonFlux()
     mg->SetTitle(title.c_str());
     mg->Draw("AP");
     Schiff.Draw("same");
-    SchiffDOWN.Draw("same");
-    SchiffUP.Draw("same");
+    // SchiffDOWN.Draw("");
+    // SchiffUP.Draw("");
     
     string str=Output::dir+"Flux_Fit_";
     str.append(FileName);
@@ -592,26 +622,32 @@ void Flux::PlotFitParameters()
     xhi=xhi*numberofdigits;
     xhi=ceil(xhi);
     xhi=xhi/numberofdigits;
-
-    TH1D ScalingParameter("Scaling_Parameter", "Scaling Parameter Distribution",100,xlow,xhi);
-    for(unsigned int i=0;i<FitParameterDistribution[0].size();i++)ScalingParameter.Fill(FitParameterDistribution[0][i]);
-    TF1 ParameterFuncGausS("Parameter_Gaus_Scale",Functions::SkewNormal,xlow,xhi,4);
-    ParameterFuncGausS.FixParameter(1,ScalingParameter.GetMean(1));
-    ParameterFuncGausS.FixParameter(2,ScalingParameter.GetStdDev(1));
-    ParameterFuncGausS.FixParameter(3,0);
-    ScalingParameter.Fit(&ParameterFuncGausS,"Q");
-    ScaleParameter.push_back(ScalingParameter.GetMean(1));
-    ScaleParameter.push_back(ScalingParameter.GetStdDev(1));
-    ParameterFuncGausS.Write();
-
     TCanvas ParameterHistScale("Scaling Parameter Histogram","Scaling Parameter Distribution",1600,900);
     ParameterHistScale.SetGrid();
     ParameterHistScale.GetFrame()->SetFillColor(21);
     ParameterHistScale.GetFrame()->SetBorderSize(12);
-    ParameterHistScale.Write();
 
-    ScalingParameter.Draw("same");
-    ParameterFuncGausS.Draw("same");
+    TH1D ScalingParameter("Scaling_Parameter", "Scaling Parameter Distribution",100,xlow,xhi);
+    for(unsigned int i=0;i<FitParameterDistribution[0].size();i++)ScalingParameter.Fill(FitParameterDistribution[0][i]);
+
+    double max=ScalingParameter.GetMaximum();
+    ScalingParameter.SetMaximum(YSCALE*max);
+    double boundary[2]={0,0};
+    Functions::ShortestCoverage(FitParameterDistribution[0],boundary);
+    TLine b_lower(boundary[0],0.,boundary[0],ScalingParameter.GetMaximum());
+    TLine b_upper(boundary[1],0.,boundary[1],ScalingParameter.GetMaximum());
+    b_lower.SetLineColor(2);
+    b_lower.SetLineWidth(2);
+    b_upper.SetLineColor(2);
+    b_upper.SetLineWidth(2);
+    ScalingParameter.Draw("");
+    b_lower.Draw("same");
+    b_upper.Draw("same");
+    ScaleParameter.push_back(ScalingParameter.GetMaximumBin());
+    ScaleParameter.push_back(boundary[0]);
+    ScaleParameter.push_back(boundary[1]);
+
+    ParameterHistScale.Write();
     string str=Output::dir+"Flux_Scale_";
     str.append(FileName);
     str.append(".pdf");
@@ -629,23 +665,36 @@ void Flux::PlotFitParameters()
     xhi=xhi*numberofdigits;
     xhi=ceil(xhi);
     xhi=xhi/numberofdigits;
-    
-    TH1D Endpoint("End_Point", "End Point Distribution",100,xlow,xhi);
-    for(unsigned int i=0;i<FitParameterDistribution[1].size();i++)Endpoint.Fill(FitParameterDistribution[1][i]);
-    Endpoint.SetXTitle("Endpoint in MeV");
-    TF1 ParameterFuncGausE("Parameter_Gaus_Endpoint",Functions::LogNormal,xlow,xhi,4);
-    ParameterFuncGausE.SetParameters(1e3,1,xlow,1);
-    Endpoint.Fit(&ParameterFuncGausE,"Q","",Parameter_Flux[2]*1.05,Parameter_Flux[3]*0.95);
-    ParameterFuncGausE.Write();
-
-
-
     TCanvas ParameterHistEndpoint("End-Point Parameter Histogram","End-Point Parameter Distribution",1600,900);
     ParameterHistEndpoint.SetGrid();
     ParameterHistEndpoint.GetFrame()->SetFillColor(21);
     ParameterHistEndpoint.GetFrame()->SetBorderSize(12);
+    
+    TH1D Endpoint("End_Point", "End Point Distribution",100,xlow,xhi);
+    for(unsigned int i=0;i<FitParameterDistribution[1].size();i++)Endpoint.Fill(FitParameterDistribution[1][i]);
+    Endpoint.SetXTitle("Endpoint in MeV");
+
+    max=Endpoint.GetMaximum();
+    Endpoint.SetMaximum(YSCALE*max);
+    Functions::ShortestCoverage(FitParameterDistribution[1],boundary);
+    TLine c_lower(boundary[0],0.,boundary[0],Endpoint.GetMaximum());
+    TLine c_upper(boundary[1],0.,boundary[1],Endpoint.GetMaximum());
+    TLine c_mid(Endpoint.GetBinCenter(Endpoint.GetMaximumBin()),0.,Endpoint.GetBinCenter(Endpoint.GetMaximumBin()),Endpoint.GetMaximum());
+    c_lower.SetLineColor(2);
+    c_lower.SetLineWidth(2);
+    c_upper.SetLineColor(2);
+    c_upper.SetLineWidth(2);
+    c_mid.SetLineColor(1);
+    c_mid.SetLineWidth(2);
+    Endpoint.Draw("");
+    c_lower.Draw("same");
+    c_upper.Draw("same");
+    c_mid.Draw("same");
+
     Endpoint.Draw("same");
-    ParameterFuncGausE.Draw("same");
+    EndPointParameter.push_back(Endpoint.GetBinCenter(Endpoint.GetMaximumBin()));
+    EndPointParameter.push_back(boundary[0]);
+    EndPointParameter.push_back(boundary[1]);
 
     str=Output::dir+"Flux_EndPoint_";
     str.append(FileName);
@@ -653,30 +702,6 @@ void Flux::PlotFitParameters()
     ParameterHistEndpoint.SaveAs(str.c_str());
     cout<<"Distribution of End-Point saved. ( "<<str<<" )"<<endl;
     
-    EndPointParameter.push_back(ParameterFuncGausE.GetMaximumX(xlow,xhi));
-    cout<<xlow<<endl;
-    for(unsigned int i =0;i<=100;i++)
-    {
-        if(Endpoint.GetBinContent(i)!=0)
-        {
-            xlow=Endpoint.GetBinCenter(i);
-            break;
-        }
-    }
-    cout<<xlow<<endl;
-    cout<<xhi<<endl;
-    for(unsigned int i =0;i<=2000;i++)
-    {
-        if(ParameterFuncGausE.Integral(0,i/2000*xhi*2)/ParameterFuncGausE.Integral(0,xhi*2)>=0.683)
-        {
-            xhi=Endpoint.GetBinCenter(i);
-            break;
-        }
-    }
-    cout<<xhi<<endl;
-    EndPointParameter.push_back(xhi);
-    EndPointParameter.push_back(xlow);
-
     ParameterHistEndpoint.Write();
 
     RFile->Write();
