@@ -458,6 +458,11 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
             xvec_flux[j]=random.Gaus(PhotonFluxData[j][0],PhotonFluxData[j][1]);
             yvec_flux[j]=rand_func[j].GetRandom();
         }
+        // for (int cc = 0; cc <PhotonFluxData.size(); ++cc)
+        // {
+            // cout<<std::setw(15)<<yvec_flux[cc]<<endl;
+        // }
+        // cout<<endl;
         TGraph DataGraph((const Int_t)datapoints_flux,xvec_flux,yvec_flux);
         TThread::Lock();
         unsigned int ID = i;
@@ -530,7 +535,7 @@ void Flux::PlotPhotonFlux()
     TF1 Schiff("Schiff-Formula",Functions::Schiff, EMIN, EndPointParameter[0]*1000,3);
     TF1 SchiffDOWN("Schiff-Formula-Down",Functions::Schiff, EMIN, EndPointParameter[1]*1000,3);
     TF1 SchiffUP("Schiff-Formula-Up",Functions::Schiff, EMIN, EndPointParameter[2]*1000,3);
-    int datapoints_flux=(int) PhotonFluxData.size();
+    int datapoints_flux=(int) PhotonFluxData.size()+2;
     Double_t xvec_flux[datapoints_flux];
     Double_t dxvec_flux[datapoints_flux];
     Double_t yvec_flux[datapoints_flux];
@@ -545,6 +550,18 @@ void Flux::PlotPhotonFlux()
         dyvec_flux[i]=PhotonFluxData[i][3];
     }
 
+    xvec_flux[datapoints_flux-1]=0;
+    dxvec_flux[datapoints_flux-1]=0;
+    yvec_flux[datapoints_flux-1]=0;
+    dyvec_flux[datapoints_flux-1]=0;
+
+    
+    xvec_flux[datapoints_flux-2]=20000;
+    dxvec_flux[datapoints_flux-2]=0;
+    yvec_flux[datapoints_flux-2]=1e50;
+    dyvec_flux[2]=0;
+
+
     TCanvas fluxplot("Photon Flux Plot","Photon Flux Plot", 1600,900);
     fluxplot.SetGrid();
     fluxplot.SetLogy();
@@ -556,12 +573,11 @@ void Flux::PlotPhotonFlux()
     fluxdata.SetMarkerSize(1);
     fluxdata.SetName("Photo Flux Data");
     fluxdata.SetFillStyle(0);
-    fluxdata.SetMaximum(YSCALE*TMath::MaxElement(datapoints_flux,yvec_flux));
-    fluxdata.SetMinimum(1e-5);
     fluxdata.GetYaxis()->SetNdivisions(505);   //Sets number of Ticks
     fluxdata.GetYaxis()->SetDecimals(kTRUE); //Sets same digits
-    fluxdata.GetXaxis()->SetRangeUser(EMIN,EndPointParameter[3]*1.2);
-    
+
+
+
     Schiff.SetLineWidth(1);
     Schiff.FixParameter(0,ScaleParameter[0]);
     Schiff.FixParameter(1,EndPointParameter[0]);
@@ -584,15 +600,16 @@ void Flux::PlotPhotonFlux()
     SchiffDOWN.SetLineColor(COLOR_DFIT);
     SchiffDOWN.SetLineStyle(7);
     SchiffDOWN.Write();
-    
-    TMultiGraph *mg = new TMultiGraph();
-    string title="Photon Flux fitted via Schiff-Formula;Energy in keV;Photo Flux in a.u.";
-    mg->Add(&fluxdata);
-    mg->SetTitle(title.c_str());
-    mg->Draw("AP");
+
+    fluxdata.GetXaxis()->SetRangeUser(EMIN,SchiffUP.GetXmax());
+    fluxdata.GetYaxis()->SetRangeUser(yvec_flux[datapoints_flux-3]*0.2,yvec_flux[0]*2);
+
+    fluxdata.SetTitle("Photon Flux fitted via Schiff-Formula;Energy in keV;Photon Flux in a.u.");
+
+    fluxdata.Draw("AP");
     Schiff.Draw("same");
-    // SchiffDOWN.Draw("");
-    // SchiffUP.Draw("");
+    SchiffDOWN.Draw("same");
+    SchiffUP.Draw("same");
     
     string str=Output::dir+"Flux_Fit_";
     str.append(FileName);
@@ -643,7 +660,7 @@ void Flux::PlotFitParameters()
     ScalingParameter.Draw("");
     b_lower.Draw("same");
     b_upper.Draw("same");
-    ScaleParameter.push_back(ScalingParameter.GetMaximumBin());
+    ScaleParameter.push_back(ScalingParameter.GetBinCenter(ScalingParameter.GetMaximumBin()));
     ScaleParameter.push_back(boundary[0]);
     ScaleParameter.push_back(boundary[1]);
 
