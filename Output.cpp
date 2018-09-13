@@ -88,12 +88,13 @@ void Output::WriteLog(vector<double>array){
 
 void Output::SetPreDataString(string line){
     LogFile.open(FileName.c_str(),std::ofstream::app);
-    LogFile  <<  "//"<<std::setw(18);
+    LogFile  <<  "//" <<std::setw(18);
     
     istringstream iss(line);
     vector<string> words(std::istream_iterator<std::string>{iss},std::istream_iterator<std::string>());
 
     for(unsigned int i =0;i<words.size();i++)LogFile<<words[i]<<std::setw(20);
+    LogFile<<" ";
     LogFile<<std::endl;
     LogFile.close();
     

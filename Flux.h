@@ -90,7 +90,8 @@ public:
     
     vector<vector<double> > GetPhotonFluxData(){return PhotonFluxData;};
     vector<vector<double> > GetICS(){return ICS;};
-    vector<vector<vector<double> > >GetExperimentalData(){return ExperimentalData;};
+    vector<vector<vector<double> > > GetExperimentalData(){return ExperimentalData;};
+    vector<vector<vector<double> > > GetCalcEfficiencyExperimental(){return calcEfficiency;};
     
     void CalculateEfficiencyforExperimentalData();
     void CorrectingPeakArea();

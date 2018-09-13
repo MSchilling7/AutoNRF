@@ -15,7 +15,7 @@
 #include"DataReader.h"
 #include"Efficiency.h"
 #include"Flux.h"
-// #include"Gamma.h"
+#include"Gamma.h"
 
 #include "Functions.h"
 #include "Output.h"
@@ -39,15 +39,15 @@ int main(int argc, char **argv)
   bool dirbool      = false;
   int c           = 0;
   
-  string InputFile;
-  string SourceDataFile;
-  string ECalibrationDataFile;
-  string SimulationDataFile;
-  string FCalibrationDataFile;
-  string ExperimentalDataFile;
-  string rfile;
-  string rootfile;
-  string dirname;
+  string InputFile ="";
+  string SourceDataFile ="";
+  string ECalibrationDataFile ="";
+  string SimulationDataFile="";
+  string FCalibrationDataFile="";
+  string ExperimentalDataFile="";
+  string rfile="";
+  string rootfile="";
+  string dirname="";
 
   
   unsigned int TNumber=1;
@@ -104,12 +104,8 @@ int main(int argc, char **argv)
         cout << endl;
         cout << "Options:" << endl;
         cout << "-i, --input" <<endl;
-        cout << "-s, --source" <<endl;
-        cout << "-e, --efficiency" << endl;
-        cout << "-S, --simulation" << endl;
-        cout << "-f, --flux" << endl;
         cout << "-t, --thread" << endl;
-        cout << "-E, --experimental" << endl;
+        cout << "-d, --dir" << endl;
         cout << "========================================================================" << endl;
         cout << "The Data should be in a propper way." << endl;
         cout << "There is no problems for , or ; for inbetween." <<endl;
@@ -117,8 +113,6 @@ int main(int argc, char **argv)
         cout << "   Energy   ΔEnergy   FWHM   EFWHM   Area   ΔArea   TailL   ΔTailL" << endl;
         cout << endl;
         cout << "========================================================================" << endl;
-        cout << "#1\tTime of the Measurement" << endl;
-        cout << "#2\tFitting-Mode (0=Knoll, 1=a4-Model, 2=Jäckel, 3=All)" << endl;
         cout << "#3\tNumber of Fits that should be done (Baysian Aproach)" << endl;
         cout << "#1\tPath to Peakfile" << endl;
         cout << "#4\tStarting Value for a0" << endl;
@@ -146,10 +140,11 @@ high_resolution_clock::time_point start = high_resolution_clock::now();
 // // // Read Data
 // // // 
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
-vector <vector <string> > DataFileArray;
-vector<vector<double> > FitParameterArray_Efficency,FitParameterArray_Flux;
-vector<double> DetectorAngles;
-vector<double> ECalTime;
+vector <vector <string> > DataFileArray(1,vector<string>(1,""));
+vector<vector<double> > FitParameterArray_Efficency(1,vector<double>(1,1));
+vector<vector<double> > FitParameterArray_Flux(1,vector<double>(1,1));
+vector<double> DetectorAngles(1,1);
+vector<double> ECalTime(1,1);
 
 struct stat st = {}; //Struct to check if Directory "Output" exists
 if (stat("Output", &st) == -1)
@@ -175,7 +170,6 @@ if(!rootbool)
 if(rootbool)
     {
         rootfile=dirname;
-        rootfile+="/";
         rootfile+=rfile;
     }
 TFile* RFile=TFile::Open(rootfile.c_str(),"RECREATE");
@@ -215,15 +209,16 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     string IFCalibrationDataFile = DataFileArray[i][3];
     string IExperimentalDataFile = DataFileArray[i][4];
     
-    vector<double> Parameter_Efficency=FitParameterArray_Efficency[i];
-    vector<double> Parameter_Flux=FitParameterArray_Flux[i];
-    vector<vector<double > >  FluxCalibrationData;
-    vector<vector<vector<double> > >  SData;
-    vector<vector<vector<double> > >  ECalData;
-    vector<vector<vector<double> > >  SimulationData;
-    vector<vector<vector<double> > >  ExperimentalData;
-    
-    vector<vector<vector<double> > > CalculatedEfficiency;
+    vector<double> Parameter_Efficency(1,1);
+    Parameter_Efficency=FitParameterArray_Efficency[i];
+    vector<double> Parameter_Flux(1,1);
+    Parameter_Flux=FitParameterArray_Flux[i];
+    vector<vector<double > >  FluxCalibrationData(1,vector<double>(1,1));
+    vector<vector<vector<double> > >  SData(1,vector<vector<double> >(1,vector<double>(1,1)));
+    vector<vector<vector<double> > >  ECalData(1,vector<vector<double> >(1,vector<double>(1,1)));
+    vector<vector<vector<double> > >  SimulationData(1,vector<vector<double> >(1,vector<double>(1,1)));
+    vector<vector<vector<double> > >  ExperimentalData(1,vector<vector<double> >(1,vector<double>(1,1)));
+    vector<vector<vector<double> > >  CalculatedEfficiency(1,vector<vector<double> >(1,vector<double>(1,1)));
     
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
         // // // 
@@ -345,13 +340,14 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     effi.CalculateEfficiency();
     CalculatedEfficiency=effi.GetEfficiencyDataArray();
     cout<<"Calculated Efficiencies for all Detectors"<<endl;
-        // read.Print3DArray(CalculatedEfficiency);
+        // read.Print3DArray(effi.GetEfficiencyDataArray());
     effi.FitEfficiency();
     effi.PlotScaleDist();
     effi.PlotEFunc();
+    string FileName="";
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
-        string FileName="Efficiency_";
+        FileName="Efficiency_";
         FileName.append(std::to_string((int)DetectorAngles[t]));
         FileName.append("_");
         FileName.append(IECalibrationDataFile.substr(0,IECalibrationDataFile.size()-4));
@@ -362,11 +358,13 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         out.WriteLog(CalculatedEfficiency[t]);
         FileName="";
     }
-    vector<vector<double> > Efficiency_Parameters=effi.GetFittedParameters();
+    vector<vector<double> > Efficiency_Parameters(1,vector<double>(1,1));
+    Efficiency_Parameters=effi.GetFittedParameters();
 
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
-        string FileName="Efficiency_";
+
+        FileName="Efficiency_";
         FileName.append(std::to_string((int)DetectorAngles[t]));
         FileName.append("_FitParameters");
         FileName.append(".log");
@@ -383,7 +381,8 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     // // 
     // // // // // // // // // // // // // // // // // // // // // // // // // // // //
         
-    vector<vector<double> > ICS,PhotonFlux;
+    vector<vector<double> > ICS(1,vector<double>(1,1));
+    vector<vector<double> >PhotonFlux(1,vector<double>(1,1));
     Flux flux;
     flux.SetFileName(IExperimentalDataFile);
     flux.SetRootFile(rootfile);
@@ -410,6 +409,30 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     flux.FitPhotonFlux();
     flux.PlotFitParameters();
     flux.PlotPhotonFlux();
+
+    FileName="Flux_";
+    FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+    FileName.append(".log");
+    out.SetFileName(FileName);
+    out.FileChecker();
+    out.SetPreDataString("Energy dEnergy Flux dmin_Flux dmax_Flux");
+    out.WriteLog(PhotonFlux);
+    FileName="";
+
+    for(unsigned int t=0;t<DetectorAngles.size();t++)
+    {
+        // DataReader::Print2DArray(flux.GetCalcEfficiencyExperimental[t]);
+        FileName="Efficiency_";
+        FileName.append(std::to_string((int)DetectorAngles[t]));
+        FileName.append("_");
+        FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+        FileName.append(".log");
+        out.SetFileName(FileName);
+        out.FileChecker();
+        out.SetPreDataString("Energy dEnergy Efficiency dmin_Efficiency dmax_Efficiency");
+        // out.WriteLog(flux.GetCalcEfficiencyExperimental[t]);
+        FileName="";
+    }
     
 }	
 

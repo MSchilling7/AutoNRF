@@ -8,7 +8,7 @@ SOFLAGS   = -fPIC -shared
 
 #user definitions concerning the project
 PROJ    = AutoNRF
-OBJ     = DataReader.o Functions.o Efficiency.o Flux.o Output.o 
+OBJ     = DataReader.o Functions.o Efficiency.o Flux.o Gamma.o Output.o 
 MAIN    = main.o
 
 
@@ -54,7 +54,7 @@ run: $(PROJ)
 	LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH ./$(PROJ) -i input.par -t 4
 #$$ for bash Enviroment Variable
 clean:
-	@rm -f ${OBJ} G__*  lib$(PROJ).so $(PROJ) *_ACLiC_dict_* *.log ${MAIN} *.d *.pcm *.so; echo Make the Project clean again!
+	@rm -rf ${OBJ} G__*  lib$(PROJ).so $(PROJ) *_ACLiC_dict_* *.log ${MAIN} *.d *.pcm *.so *.pdf Output/; echo Make the Project clean again!
 
 clear:
-	@rm -f ${OBJ} G__*  lib$(PROJ).so $(PROJ) *_ACLiC_dict_* *.log ${MAIN} *.d *.pcm *.so; echo Make the Project clean again!
+	@rm -rf ${OBJ} G__*  lib$(PROJ).so $(PROJ) *_ACLiC_dict_* *.log ${MAIN} *.d *.pcm *.so *.pdf Output/; echo Make the Project clean again!

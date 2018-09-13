@@ -270,7 +270,6 @@ void Flux::CalculateFlux()
                 tempVector[t][i][2]=Area;
                 tempVector[t][i][3]=dAreaLow;
                 tempVector[t][i][4]=dAreaHigh;
-                // cout<<"PENIS PENIS"<<endl;
                 for(unsigned k=0;k<tempVector[t][i].size();k++)cout<<std::setw(15)<<tempVector[t][i][k];
                 cout<<endl;
             }
@@ -301,11 +300,16 @@ void Flux::CalculateFlux()
         TF1 EfficiencyFunction("EfficiencyFunction",Functions::knoll, 0, 10000,NumberofParameters);
         TF1 EfficiencyFunctionLOW("EfficiencyFunction",Functions::knoll, 0, 10000,NumberofParameters);
         TF1 EfficiencyFunctionHIGH("EfficiencyFunction",Functions::knoll, 0, 10000,NumberofParameters);
+        double ScaleLow=0;
+        double ScaleHigh=0;
+        double val=0;
+        double vallow=0;
+        double valhigh=0;
 
-        for(unsigned int t=0;t<DetectorAngles[t];t++)
+        for(unsigned int t=0;t<DetectorAngles.size();t++)
         {
-            double ScaleLow=Parameter_Efficiency[t][1];
-            double ScaleHigh=Parameter_Efficiency[t][2];
+            ScaleLow=Parameter_Efficiency[t][1];
+            ScaleHigh=Parameter_Efficiency[t][2];
             Parameter_Efficiency[t].erase(Parameter_Efficiency[t].begin()+1);
             Parameter_Efficiency[t].erase(Parameter_Efficiency[t].begin()+1);
             for(unsigned int i=0;i<=NumberofParameters;i++){EfficiencyFunction.SetParameter(i,Parameter_Efficiency[t][i]);}
@@ -316,11 +320,11 @@ void Flux::CalculateFlux()
 
             for(unsigned int i=0;i<ExperimentalData[t].size();i++)
             {
-                double val=EfficiencyFunction.Eval(ExperimentalData[t][i][0]);
-                double vallow=fabs(val-EfficiencyFunctionLOW.Eval(ExperimentalData[t][i][0]));
+                val=EfficiencyFunction.Eval(ExperimentalData[t][i][0]);
+                vallow=fabs(val-EfficiencyFunctionLOW.Eval(ExperimentalData[t][i][0]));
                 vallow=vallow*vallow/(val*val)+func.relError2(ExperimentalData[t][i],4,5);
                 vallow=val*sqrt(vallow);
-                double valhigh=fabs(val-EfficiencyFunctionHIGH.Eval(ExperimentalData[t][i][0]));
+                valhigh=fabs(val-EfficiencyFunctionHIGH.Eval(ExperimentalData[t][i][0]));
                 valhigh=valhigh*valhigh/(val*val)+func.relError2(ExperimentalData[t][i],4,5);
                 valhigh=val*sqrt(valhigh);
                 tempVector.push_back(ExperimentalData[t][i][0]);
@@ -631,7 +635,7 @@ void Flux::PlotFitParameters()
     RFile->cd("Flux");
     double xlow=TMath::MinElement(NFit,&FitParameterDistribution[0][0]);
     double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[0][0]);
-    int numberofdigits=(int)pow(10,fabs(ceil(log10(FitParameterDistribution[0][0]))));
+    int numberofdigits=10*(int)pow(10,fabs(ceil(log10(FitParameterDistribution[0][0]))));
     xlow=xlow*numberofdigits;
     xlow=floor(xlow);
     xlow=xlow/numberofdigits;
