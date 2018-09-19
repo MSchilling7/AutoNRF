@@ -49,8 +49,9 @@ public:
     static void ShortestCoverage(vector<double> param_array,double boundary[2]);
     
 
-    vector<int> Maching2Doubles(vector< vector <double> > a,int anumber,const char aCorR, vector<vector <double> > b, int bnumber,const char bCorR);
-    double relError2(vector <double> a,int posVal, int posError);
+    static vector<unsigned int> Maching2Doubles(vector< vector <double> > a,int anumber,const char aCorR, vector<vector <double> > b, int bnumber,const char bCorR);
+    static double relError2(vector <double> a,int posVal, int posError);
+    static unsigned int MinIndex(double val,vector<vector<vector<double> > > array);
 private:
 
 };

@@ -67,7 +67,7 @@ public:
     NFit(0),
     NumberOfThreads(0),
     Percent(),
-    ExperimentalData(),
+    CalibrationData(),
     calcEfficiency(),
     ICS(),
     FluxParameter(),
@@ -77,10 +77,11 @@ public:
     DetectorAngles(),
     ScaleParameter(),
     EndPointParameter(),
+    FittedParameters(),
     Parameter_Efficiency()
     {;};
     void SetRootFile(string rootfile){rfile=rootfile;};
-    void SetInputData(vector<vector<vector<double> > >Data){ExperimentalData=Data;};
+    void SetCalibrationData(vector<vector<vector<double> > >Data){CalibrationData=Data;};
     void SetFluxParameter(vector<vector<double> > Data){FluxParameter=Data;};
     void SetEfficiencyParameter(vector<vector<double> >EFit){Parameter_Efficiency=EFit;}
     void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
@@ -88,12 +89,15 @@ public:
     void SetNThread(unsigned int t){NumberOfThreads=t;};
     void SetDetectorAngles(vector<double> Angles){DetectorAngles=Angles;};
     
+    vector<double> GetFittedParameters();
     vector<vector<double> > GetPhotonFluxData(){return PhotonFluxData;};
     vector<vector<double> > GetICS(){return ICS;};
-    vector<vector<vector<double> > > GetExperimentalData(){return ExperimentalData;};
-    vector<vector<vector<double> > > GetCalcEfficiencyExperimental(){return calcEfficiency;};
+    vector<vector<double> > GetFitParameterDistribution(){return FitParameterDistribution;};
+    vector<vector<vector<double> > > GetCalibrationData(){return CalibrationData;};
+    vector<vector<vector<double> > > GetCalcEfficiencyCalibrationData(){return calcEfficiency;};
+
     
-    void CalculateEfficiencyforExperimentalData();
+    void CalculateEfficiencyforCalibrationData();
     void CorrectingPeakArea();
     void CalculateICS();
     void CalculateFlux();
@@ -120,14 +124,14 @@ private:
     bool PhotonFluxFitter(unsigned int NThread);
     unsigned int NFit,NumberOfFits,NumberOfThreads;
     vector<unsigned int>Percent;
-    vector<vector<vector<double> > >ExperimentalData;
+    vector<vector<vector<double> > >CalibrationData;
     vector<vector<vector<double> > >calcEfficiency;
     vector<vector<double> > ICS;
     vector<vector<double> > FluxParameter;
     vector<vector<double> > PhotonFluxData;
     vector<vector<double> > FitParameterDistribution;
     vector<double> Parameter_Flux,DetectorAngles;
-    vector<double> ScaleParameter,EndPointParameter;
+    vector<double> ScaleParameter,EndPointParameter,FittedParameters;
     vector<vector<double> > Parameter_Efficiency;
     const double hqc= 197.3269788*1000;//keV fm
     

@@ -20,7 +20,7 @@ Flux::Flux():
     NFit(0),
     NumberOfThreads(0),
     Percent(),
-    ExperimentalData(),
+    CalibrationData(),
     calcEfficiency(),
     ICS(),
     FluxParameter(),
@@ -30,6 +30,7 @@ Flux::Flux():
     DetectorAngles(),
     ScaleParameter(),
     EndPointParameter(),
+    FittedParameters(),
     Parameter_Efficiency()
 {
 
@@ -45,20 +46,19 @@ Flux::~Flux()
 
 void Flux::CorrectingPeakArea()
 {   
-    Functions func;
     vector<double> tempVector;
     vector< vector <double> > temp2DVector, temp2DVector2;
-    vector <int> minlist,minlist2,minlist3;
+    vector <unsigned int> minlist,minlist2,minlist3;
     vector<vector <double> > Inelastic,Elastic;
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
 
         double temp=0;
 
-    // Get the Gamma-Ray Energy from Input Parameter File for ExperimentalData File
-        minlist=func.Maching2Doubles(ExperimentalData[t],0,'C',FluxParameter,E_GAMMA,'C');
-        for(unsigned int i=0;i<ExperimentalData[t].size();i++){
-            ExperimentalData[t][i][0]=FluxParameter[minlist[i]][E_GAMMA];
+    // Get the Gamma-Ray Energy from Input Parameter File for CalibrationData File
+        minlist=Functions::Maching2Doubles(CalibrationData[t],0,'C',FluxParameter,E_GAMMA,'C');
+        for(unsigned int i=0;i<CalibrationData[t].size();i++){
+            CalibrationData[t][i][0]=FluxParameter[minlist[i]][E_GAMMA];
             
         }
         minlist.clear();
@@ -69,14 +69,14 @@ void Flux::CorrectingPeakArea()
             if(FluxParameter[i][E_FINAL]==0)Elastic.push_back(FluxParameter[i]);
         };
     // Clean Input Data File from Inelastic Transitions
-        for(unsigned int i=0;i<ExperimentalData[t].size();i++)
+        for(unsigned int i=0;i<CalibrationData[t].size();i++)
         {
             for(unsigned int j=0;j<FluxParameter.size();j++)
             {
                 if(temp!=FluxParameter[j][EX])
                 {
                     temp=FluxParameter[j][EX];
-                    if(ExperimentalData[t][i][0]==FluxParameter[j][E_GAMMA])
+                    if(CalibrationData[t][i][0]==FluxParameter[j][E_GAMMA])
                     {
                         minlist.push_back(i);
                     }
@@ -86,18 +86,18 @@ void Flux::CorrectingPeakArea()
         for(unsigned int i=0;i<minlist.size();i++)
         {
             temp2DVector.push_back(calcEfficiency[t][minlist[i]]);
-            temp2DVector2.push_back(ExperimentalData[t][minlist[i]]);
+            temp2DVector2.push_back(CalibrationData[t][minlist[i]]);
         }
-        ExperimentalData[t]=temp2DVector2;
+        CalibrationData[t]=temp2DVector2;
         calcEfficiency[t]=temp2DVector;
         temp2DVector.clear();
         temp2DVector2.clear();
         minlist.clear();
         
-        minlist=func.Maching2Doubles(ExperimentalData[t],0,'C',Elastic,EX,'C');
-        for(unsigned int i=0;i<ExperimentalData[t].size();i++)
+        minlist=Functions::Maching2Doubles(CalibrationData[t],0,'C',Elastic,EX,'C');
+        for(unsigned int i=0;i<CalibrationData[t].size();i++)
         {
-            if(Elastic[minlist[i]][E_GAMMA]==ExperimentalData[t][i][0])
+            if(Elastic[minlist[i]][E_GAMMA]==CalibrationData[t][i][0])
             {
                 temp2DVector.push_back(Elastic[minlist[i]]);
             }
@@ -123,27 +123,27 @@ void Flux::CorrectingPeakArea()
                 if(Elastic[i][EX]==Inelastic[j][EX])
                 {
                     Inelastic[j][BRANCHING]=Inelastic[j][BRANCHING]/Elastic[i][BRANCHING];
-                    Inelastic[j][DBRANCHING]=Inelastic[j][BRANCHING]/Elastic[i][BRANCHING]*sqrt(func.relError2(Inelastic[j],BRANCHING,DBRANCHING)+func.relError2(Elastic[i],BRANCHING,DBRANCHING));
+                    Inelastic[j][DBRANCHING]=Inelastic[j][BRANCHING]/Elastic[i][BRANCHING]*sqrt(Functions::relError2(Inelastic[j],BRANCHING,DBRANCHING)+Functions::relError2(Elastic[i],BRANCHING,DBRANCHING));
                     
                 }
             }
         }
-        minlist=func.Maching2Doubles(Inelastic,EX,'C',ExperimentalData[t],0,'C');
-        minlist2=func.Maching2Doubles(Inelastic,E_FINAL,'C',ExperimentalData[t],0,'C');
-        minlist3=func.Maching2Doubles(Inelastic,E_FINAL,'C',Elastic,EX,'C');
+        minlist=Functions::Maching2Doubles(Inelastic,EX,'C',CalibrationData[t],0,'C');
+        minlist2=Functions::Maching2Doubles(Inelastic,E_FINAL,'C',CalibrationData[t],0,'C');
+        minlist3=Functions::Maching2Doubles(Inelastic,E_FINAL,'C',Elastic,EX,'C');
     // Feeding Correction of Peak Areas (Top-Down)
         double Volume, dVolume;
         for(unsigned int i=0;i<Inelastic.size();i++)
         {
-            if(DetectorAngles[t] == 90)Volume=Inelastic[i][BRANCHING]*calcEfficiency[t][minlist2[i]][2]/calcEfficiency[t][minlist[i]][2]*Inelastic[i][W90]/Elastic[minlist3[i]][W90]*ExperimentalData[t][minlist[i]][4];
-            if(DetectorAngles[t] == 130)Volume=Inelastic[i][BRANCHING]*calcEfficiency[t][minlist2[i]][2]/calcEfficiency[t][minlist[i]][2]*Inelastic[i][W130]/Elastic[minlist3[i]][W130]*ExperimentalData[t][minlist[i]][4];
+            if(DetectorAngles[t] == 90)Volume=Inelastic[i][BRANCHING]*calcEfficiency[t][minlist2[i]][2]/calcEfficiency[t][minlist[i]][2]*Inelastic[i][W90]/Elastic[minlist3[i]][W90]*CalibrationData[t][minlist[i]][4];
+            if(DetectorAngles[t] == 130)Volume=Inelastic[i][BRANCHING]*calcEfficiency[t][minlist2[i]][2]/calcEfficiency[t][minlist[i]][2]*Inelastic[i][W130]/Elastic[minlist3[i]][W130]*CalibrationData[t][minlist[i]][4];
             
             dVolume=Volume*sqrt
             (
-                func.relError2(calcEfficiency[t][minlist2[i]],2,3)+
-                func.relError2(calcEfficiency[t][minlist[i]],2,3)+
-                func.relError2(ExperimentalData[t][minlist[i]],4,5)+
-                func.relError2(Inelastic[i],BRANCHING,DBRANCHING)
+                Functions::relError2(calcEfficiency[t][minlist2[i]],2,3)+
+                Functions::relError2(calcEfficiency[t][minlist[i]],2,3)+
+                Functions::relError2(CalibrationData[t][minlist[i]],4,5)+
+                Functions::relError2(Inelastic[i],BRANCHING,DBRANCHING)
                 );
             Inelastic[i][CORRECT_VOLUME]=Volume;
             Inelastic[i][CORRECT_DVOLUME]=dVolume;
@@ -151,11 +151,11 @@ void Flux::CorrectingPeakArea()
         for(unsigned int i=(unsigned int)Inelastic.size();0<i;--i)
         {
             unsigned int j=i-1;
-            Volume=ExperimentalData[t][minlist2[j]][4]-Inelastic[j][CORRECT_VOLUME];
-            dVolume=sqrt(ExperimentalData[t][minlist2[j]][5]*ExperimentalData[t][minlist2[j]][5]+Inelastic[j][CORRECT_DVOLUME]*Inelastic[j][CORRECT_DVOLUME]);
+            Volume=CalibrationData[t][minlist2[j]][4]-Inelastic[j][CORRECT_VOLUME];
+            dVolume=sqrt(CalibrationData[t][minlist2[j]][5]*CalibrationData[t][minlist2[j]][5]+Inelastic[j][CORRECT_DVOLUME]*Inelastic[j][CORRECT_DVOLUME]);
             
-            ExperimentalData[t][minlist2[j]][4]=Volume;
-            ExperimentalData[t][minlist2[j]][5]=dVolume;
+            CalibrationData[t][minlist2[j]][4]=Volume;
+            CalibrationData[t][minlist2[j]][5]=dVolume;
         }
         Inelastic.clear();
         Elastic.clear();
@@ -172,7 +172,6 @@ void Flux::CorrectingPeakArea()
 
 void Flux::CalculateICS()
 {
-    Functions func;
     vector<double> tempVector;
     
 
@@ -189,7 +188,7 @@ void Flux::CalculateICS()
         //Gamma is in eV to get the right Value convert it to keV
         tempVector.push_back(TMath::Pi()*TMath::Pi()*((2*J1+1)/(2*J0+1))*(hqc/Energy)*(hqc/Energy)*Gamma*(1e-3)*Branching);
 
-        tempVector.push_back(tempVector[2]*sqrt(func.relError2(FluxParameter[i],6,7)+func.relError2(FluxParameter[i],8,9)));
+        tempVector.push_back(tempVector[2]*sqrt(Functions::relError2(FluxParameter[i],6,7)+Functions::relError2(FluxParameter[i],8,9)));
         ICS.push_back(tempVector);
         tempVector.clear();
     }
@@ -201,12 +200,11 @@ void Flux::CalculateICS()
 void Flux::CalculateFlux()
 {
 
-    Functions func;
     vector<vector<vector<double> > >tempVector;
-    vector <int> minlist;
+    vector <unsigned int> minlist;
     double Area;
     double dAreaLow,dAreaHigh;
-    PhotonFluxData.resize(ExperimentalData[0].size());
+    PhotonFluxData.resize(CalibrationData[0].size());
     for(unsigned int i=0;i<PhotonFluxData.size();i++)PhotonFluxData[i].resize(5);
     tempVector.resize(DetectorAngles.size());
     for(unsigned int i=0;i<tempVector.size();i++)
@@ -219,8 +217,8 @@ void Flux::CalculateFlux()
         for(unsigned int t=0;t<DetectorAngles.size();t++)
         {
             cout<<"Calculate Photon Flux for the Detector under "<< (int) DetectorAngles[t]<< " deg..."<<endl;
-            minlist=func.Maching2Doubles(ExperimentalData[t],0,'C',FluxParameter,2,'C');
-            for(unsigned int i=0;i<ExperimentalData[t].size();i++)
+            minlist=Functions::Maching2Doubles(CalibrationData[t],0,'C',FluxParameter,2,'C');
+            for(unsigned int i=0;i<CalibrationData[t].size();i++)
             {
                 int j=minlist[i];
                 tempVector[t][i][0]=FluxParameter[j][2];
@@ -233,7 +231,7 @@ void Flux::CalculateFlux()
                 if(DetectorAngles[t] == 90)
                 {
                     Area=
-                    ExperimentalData[t][i][4]
+                    CalibrationData[t][i][4]
                     /Parameter_Flux[5]
                     /calcEfficiency[t][i][2]
                     /ICS[j][2]
@@ -244,7 +242,7 @@ void Flux::CalculateFlux()
                 if(DetectorAngles[t] == 130)
                 {
                     Area=
-                    ExperimentalData[t][i][4]
+                    CalibrationData[t][i][4]
                     /Parameter_Flux[5]
                     /calcEfficiency[t][i][2]
                     /ICS[j][2]
@@ -255,16 +253,16 @@ void Flux::CalculateFlux()
 
                 dAreaLow=Area*
                 sqrt(
-                    func.relError2(Parameter_Flux,5,6)+
-                    func.relError2(ICS[j],2,3)
-                    +func.relError2(calcEfficiency[t][i],2,3)
+                    Functions::relError2(Parameter_Flux,5,6)+
+                    Functions::relError2(ICS[j],2,3)
+                    +Functions::relError2(calcEfficiency[t][i],2,3)
                     );
 
                 dAreaHigh=Area*
                 sqrt(
-                    func.relError2(Parameter_Flux,5,6)+
-                    func.relError2(ICS[j],2,3)
-                    +func.relError2(calcEfficiency[t][i],2,4)
+                    Functions::relError2(Parameter_Flux,5,6)+
+                    Functions::relError2(ICS[j],2,3)
+                    +Functions::relError2(calcEfficiency[t][i],2,4)
                     );
                 
                 tempVector[t][i][2]=Area;
@@ -291,9 +289,8 @@ void Flux::CalculateFlux()
 
 // ---------------------------------------------------------
 
-    void Flux::CalculateEfficiencyforExperimentalData()
+    void Flux::CalculateEfficiencyforCalibrationData()
     {
-        Functions func;
         vector<double> tempVector;
         vector<vector<double> >temp2DVector;
         unsigned int NumberofParameters = 6;
@@ -318,17 +315,17 @@ void Flux::CalculateFlux()
             EfficiencyFunctionLOW.SetParameter(0,ScaleLow);
             EfficiencyFunctionHIGH.SetParameter(0,ScaleHigh);
 
-            for(unsigned int i=0;i<ExperimentalData[t].size();i++)
+            for(unsigned int i=0;i<CalibrationData[t].size();i++)
             {
-                val=EfficiencyFunction.Eval(ExperimentalData[t][i][0]);
-                vallow=fabs(val-EfficiencyFunctionLOW.Eval(ExperimentalData[t][i][0]));
-                vallow=vallow*vallow/(val*val)+func.relError2(ExperimentalData[t][i],4,5);
+                val=EfficiencyFunction.Eval(CalibrationData[t][i][0]);
+                vallow=fabs(val-EfficiencyFunctionLOW.Eval(CalibrationData[t][i][0]));
+                vallow=vallow*vallow/(val*val)+Functions::relError2(CalibrationData[t][i],4,5);
                 vallow=val*sqrt(vallow);
-                valhigh=fabs(val-EfficiencyFunctionHIGH.Eval(ExperimentalData[t][i][0]));
-                valhigh=valhigh*valhigh/(val*val)+func.relError2(ExperimentalData[t][i],4,5);
+                valhigh=fabs(val-EfficiencyFunctionHIGH.Eval(CalibrationData[t][i][0]));
+                valhigh=valhigh*valhigh/(val*val)+Functions::relError2(CalibrationData[t][i],4,5);
                 valhigh=val*sqrt(valhigh);
-                tempVector.push_back(ExperimentalData[t][i][0]);
-                tempVector.push_back(ExperimentalData[t][i][1]);
+                tempVector.push_back(CalibrationData[t][i][0]);
+                tempVector.push_back(CalibrationData[t][i][1]);
                 tempVector.push_back(val);
                 tempVector.push_back(vallow);
                 tempVector.push_back(valhigh);
@@ -615,7 +612,7 @@ void Flux::PlotPhotonFlux()
     SchiffDOWN.Draw("same");
     SchiffUP.Draw("same");
     
-    string str=Output::dir+"Flux_Fit_";
+    string str=Output::dir+"Flux/Flux_Fit_";
     str.append(FileName);
     str.append(".pdf");
     fluxplot.SaveAs(str.c_str());
@@ -669,7 +666,7 @@ void Flux::PlotFitParameters()
     ScaleParameter.push_back(boundary[1]);
 
     ParameterHistScale.Write();
-    string str=Output::dir+"Flux_Scale_";
+    string str=Output::dir+"Flux/Flux_Scale_";
     str.append(FileName);
     str.append(".pdf");
     ParameterHistScale.SaveAs(str.c_str());
@@ -717,7 +714,7 @@ void Flux::PlotFitParameters()
     EndPointParameter.push_back(boundary[0]);
     EndPointParameter.push_back(boundary[1]);
 
-    str=Output::dir+"Flux_EndPoint_";
+    str=Output::dir+"Flux/Flux_EndPoint_";
     str.append(FileName);
     str.append(".pdf");
     ParameterHistEndpoint.SaveAs(str.c_str());
@@ -727,4 +724,13 @@ void Flux::PlotFitParameters()
 
     RFile->Write();
     // RFile->Close();
+}
+// ---------------------------------------------------------
+
+vector<double> Flux::GetFittedParameters()
+{
+    FittedParameters.insert(FittedParameters.end(),ScaleParameter.begin(),ScaleParameter.end());
+    FittedParameters.insert(FittedParameters.end(),EndPointParameter.begin(),EndPointParameter.end());
+    FittedParameters.push_back(Parameter_Flux[4]);
+    return FittedParameters;
 }

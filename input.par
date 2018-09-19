@@ -1,9 +1,11 @@
 //Efficency
-//Source    ECal            Sim     NFit  Scale   a0  a1  a2 a3  a4 Times
-default     kobalt_pol.dat  sim.dat 1e4   1       0   0   0   0   0 1 2
+//Source     ECal            Sim     NFit  Scale   a0  a1  a2 a3  a4 Times
+56CoData.dat kobalt_pol.dat  sim.dat 1e2   1       0   0   0   0   0 1 2
 //Flux
-//FluxParameter   NFit scale   E0min E0max  Z      Mass    dMass  Experimental Angels
-Bor_Parameter.dat 1e4  1       9     14     79     1e-11   1e-14  default      90 130
+//FluxParameter   Cal           NFit scale   E0min E0max  Z      Mass    dMass   
+Bor_Parameter.dat BorPoints.dat 1e2  1       9     11     79     1e-11   1e-14   
+//Experimental  	  AnularDist 					Mass    dMass   Angels
+ExperimentalData.dat  ExperimentalDataAngular.dat    1e-11   1e-14   90 130
 ////////////////////////////////////////////////////////////////////////////////////////
 // NEXT
 ///////////////////////////////////////////////////////////////////////////////////////

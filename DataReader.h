@@ -36,31 +36,34 @@ public:
     void SetSourceData();
     void SetECalData();
     void SetExperimentalData();
+    void SetCalibrationFluxData();
     void SetSimulationData();
-    void SetFluxCalibrationData();
+    void SetCalibrationFluxParameter();
+    void SetAngularDistribution();
     static void Print2DArray(vector<vector<double> > array);
     static void Print3DArray(vector<vector<vector<double> > > array);
     static void Print1DArray(vector<int> array);
     static void Print1DArray(vector<double> array);
     static void Print1DArray(vector<string> array);
     
-    vector<vector<double> >GetFitParameterArray_Efficency()const{return fitParameterarray_Efficency;};
-    vector<vector<double> >GetFitParameterArray_Flux()const{return fitParameterarray_Flux;};
+    vector<vector<double> > GetFitParameterArray_Efficency()const{return fitParameterarray_Efficency;};
+    vector<vector<double> > GetFitParameterArray_Flux()const{return fitParameterarray_Flux;};
+    vector<vector<double> > GetExperimentalDataAngularArray()const{return experimentalDataAngular;};
     vector<double> GetDetectorAnglesArray()const{return DetectorAngles;};
     vector<double> GetECalTimeArray()const{return ETimes;};
+    vector<double> GetTargetMassArray()const{return Mass;};
     vector <vector <string> > GetDataFileArray()const{return DataFilearray;};
     
-    vector<vector<double> > GetFluxCalibrationDataArray()const{return fluxcalibrationData;};
+    vector<vector<double> > GetCalibrationFluxParameterArray()const{return fluxcalibrationData;};
     vector<vector<vector<double> > > GetSourceDataArray()const{return sData;};
     vector<vector<vector<double> > > GetECalDataArray()const{return ecalData;};
     vector<vector<vector<double> > > GetSimulationDataArray()const{return simulationData;};
     vector<vector<vector<double> > > GetExperimentalDataArray()const{return experimentalData;};
+    vector<vector<vector<double> > > GetCalibrationFluxDataArray()const{return calibrationfluxdata;};
     
     
 
 private:
-    
-    unsigned int InputLines;
     
     const char* GetFileName()const{return inputFileName.c_str();};
     
@@ -68,8 +71,8 @@ private:
     string inputFileName;
     
     
-    vector<vector<double> > fitParameterarray_Efficency,fitParameterarray_Flux;
-    vector<double> DetectorAngles,ETimes;
+    vector<vector<double> > fitParameterarray_Efficency,fitParameterarray_Flux,experimentalDataAngular;
+    vector<double> DetectorAngles,ETimes,Mass;
     vector<string> DataFileline;
     vector <vector <string> > DataFilearray;
     
@@ -79,6 +82,7 @@ private:
     vector<vector<vector<double> > > ecalData;
     vector<vector<vector<double> > > simulationData;
     vector<vector<vector<double> > > experimentalData;
+    vector<vector<vector<double> > > calibrationfluxdata;
 };
 
 // ------------------------------------------------------

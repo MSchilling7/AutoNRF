@@ -40,11 +40,6 @@ int main(int argc, char **argv)
   int c           = 0;
   
   string InputFile ="";
-  string SourceDataFile ="";
-  string ECalibrationDataFile ="";
-  string SimulationDataFile="";
-  string FCalibrationDataFile="";
-  string ExperimentalDataFile="";
   string rfile="";
   string rootfile="";
   string dirname="";
@@ -160,6 +155,29 @@ if (stat(dirname.c_str(), &st) == -1)
     mkdir(dirname.c_str(), 0777);
     cout<<"Created directory /"<<dirname.c_str()<<"/"<<endl<<endl;
 }
+string folder=dirname;
+folder+="/Efficiency";
+if (stat(folder.c_str(), &st) == -1)
+{
+    mkdir(folder.c_str(), 0777);
+    cout<<"Created directory /"<<folder.c_str()<<"/"<<endl<<endl;
+}
+folder=dirname;
+folder+="/Flux";
+if (stat(folder.c_str(), &st) == -1)
+{
+    mkdir(folder.c_str(), 0777);
+    cout<<"Created directory /"<<folder.c_str()<<"/"<<endl<<endl;
+}
+folder=dirname;
+folder+="/Results";
+if (stat(folder.c_str(), &st) == -1)
+{
+    mkdir(folder.c_str(), 0777);
+    cout<<"Created directory /"<<folder.c_str()<<"/"<<endl<<endl;
+}
+
+
 dirname+="/";
 if(!threadbool)TNumber=1;
 if(!rootbool)
@@ -175,6 +193,7 @@ if(rootbool)
 TFile* RFile=TFile::Open(rootfile.c_str(),"RECREATE");
 RFile->mkdir("Efficiency");
 RFile->mkdir("Flux");
+RFile->mkdir("Results");
 RFile->Write();
 RFile->Close();
 Output::dir=dirname;
@@ -203,21 +222,26 @@ if(!input)
 // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 for(unsigned int i=0;i<DataFileArray.size();i++)
 {
-    string ISourceDataFile       = DataFileArray[i][0];
-    string IECalibrationDataFile = DataFileArray[i][1];
-    string ISimulationDataFile   = DataFileArray[i][2];
-    string IFCalibrationDataFile = DataFileArray[i][3];
-    string IExperimentalDataFile = DataFileArray[i][4];
-    
+    string ISourceDataFile                   = DataFileArray[i][0];
+    string IECalibrationDataFile             = DataFileArray[i][1];
+    string ISimulationDataFile               = DataFileArray[i][2];
+    string IFCalibrationParameterFile        = DataFileArray[i][3];
+    string IFCalibrationFluxDataFile         = DataFileArray[i][4];
+    string IExperimentalDataFile             = DataFileArray[i][5];
+    string IExperimentalAngularDataFile      = DataFileArray[i][6];
+
     vector<double> Parameter_Efficency(1,1);
     Parameter_Efficency=FitParameterArray_Efficency[i];
+    vector<double> TargetMass(1,1);
     vector<double> Parameter_Flux(1,1);
     Parameter_Flux=FitParameterArray_Flux[i];
-    vector<vector<double > >  FluxCalibrationData(1,vector<double>(1,1));
+    vector<vector<double> >  FluxCalibrationData(1,vector<double>(1,1));
+    vector<vector<double> >  ExperimentalDataAngular(1,vector<double>(1,1));
     vector<vector<vector<double> > >  SData(1,vector<vector<double> >(1,vector<double>(1,1)));
     vector<vector<vector<double> > >  ECalData(1,vector<vector<double> >(1,vector<double>(1,1)));
     vector<vector<vector<double> > >  SimulationData(1,vector<vector<double> >(1,vector<double>(1,1)));
     vector<vector<vector<double> > >  ExperimentalData(1,vector<vector<double> >(1,vector<double>(1,1)));
+    vector<vector<vector<double> > >  CalibrationFluxData(1,vector<vector<double> >(1,vector<double>(1,1)));
     vector<vector<vector<double> > >  CalculatedEfficiency(1,vector<vector<double> >(1,vector<double>(1,1)));
     
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
@@ -282,22 +306,42 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
         // // // 
-        // // // Read Flux Data
+        // // // Read Flux Data Parameter
         // // // 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
 
-        if(IFCalibrationDataFile!="default" && IFCalibrationDataFile!="DEFAULT")
+        if(IFCalibrationParameterFile!="default" && IFCalibrationParameterFile!="DEFAULT")
         {
-            read.SetInputName(IFCalibrationDataFile);
-            read.SetFluxCalibrationData();
-            FluxCalibrationData=read.GetFluxCalibrationDataArray();
+            read.SetInputName(IFCalibrationParameterFile);
+            read.SetCalibrationFluxParameter();
+            FluxCalibrationData=read.GetCalibrationFluxParameterArray();
         }
-        if(IFCalibrationDataFile=="default" ||IFCalibrationDataFile=="DEFAULT")
+        if(IFCalibrationParameterFile=="default" ||IFCalibrationParameterFile=="DEFAULT")
         { 
             read.SetInputName("Bor_Parameter.dat");
-            IFCalibrationDataFile="Bor_Parameter.dat";
-            read.SetFluxCalibrationData();
-            FluxCalibrationData=read.GetFluxCalibrationDataArray();
+            IFCalibrationParameterFile="Bor_Parameter.dat";
+            read.SetCalibrationFluxParameter();
+            FluxCalibrationData=read.GetCalibrationFluxParameterArray();
+        }
+
+        // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
+        // // // 
+        // // // Read Flux Data
+        // // // 
+        // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+    
+        if(IFCalibrationFluxDataFile!="default" && IFCalibrationFluxDataFile!="DEFAULT")
+        {
+            read.SetInputName(IFCalibrationFluxDataFile);
+            read.SetCalibrationFluxData();
+            CalibrationFluxData=read.GetCalibrationFluxDataArray();
+        }
+        if(IFCalibrationFluxDataFile=="default" ||IFCalibrationFluxDataFile=="DEFAULT")
+        {
+            read.SetInputName("BorPoints.dat");
+            IFCalibrationFluxDataFile="BorPoints.dat";
+            read.SetCalibrationFluxData();
+            CalibrationFluxData=read.GetCalibrationFluxDataArray();
         }
 
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
@@ -320,6 +364,28 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
             ExperimentalData=read.GetExperimentalDataArray();
         }
 
+        // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
+        // // // 
+        // // // Read Experimental Angular Data
+        // // // 
+        // // // // // // // // // // // // // // // // // // // // // // // // // // // // //
+    
+        if(IExperimentalAngularDataFile!="default" && IExperimentalAngularDataFile!="DEFAULT")
+        {
+            read.SetInputName(IExperimentalAngularDataFile);
+            read.SetAngularDistribution();
+            ExperimentalDataAngular=read.GetExperimentalDataAngularArray();
+        }
+        if(IExperimentalAngularDataFile=="default" ||IExperimentalAngularDataFile=="DEFAULT")
+        {
+            read.SetInputName("ExperimentalDataAngular.dat");
+            IExperimentalAngularDataFile="ExperimentalDataAngular.dat";
+            read.SetAngularDistribution();
+            ExperimentalDataAngular=read.GetExperimentalDataAngularArray();
+        }
+
+        TargetMass=read.GetTargetMassArray();
+
     cout<<"Reading Data Complete!"<<endl;
     // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
     // // // 
@@ -336,7 +402,6 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     effi.SetFitParameterVector(Parameter_Efficency);
     effi.SetECalTime(ECalTime);
     effi.SetDetectorAngles(DetectorAngles);
-    effi.OrganizeData();
     effi.CalculateEfficiency();
     CalculatedEfficiency=effi.GetEfficiencyDataArray();
     cout<<"Calculated Efficiencies for all Detectors"<<endl;
@@ -388,15 +453,15 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     flux.SetRootFile(rootfile);
     flux.SetNThread(TNumber);
     flux.SetDetectorAngles(DetectorAngles);
-    flux.SetInputData(ExperimentalData);
+    flux.SetCalibrationData(CalibrationFluxData);
     flux.SetFluxParameter(FluxCalibrationData);
     flux.SetEfficiencyParameter(effi.GetFittedParameters());
     flux.SetFitParameters(Parameter_Flux);
-    flux.CalculateEfficiencyforExperimentalData();
+    flux.CalculateEfficiencyforCalibrationData();
     flux.CorrectingPeakArea();
-    ExperimentalData=flux.GetExperimentalData();
+    CalibrationFluxData=flux.GetCalibrationData();
     cout<<"Corrected PeakAreas:"<<endl<<endl;
-    read.Print3DArray(ExperimentalData);
+    read.Print3DArray(CalibrationFluxData);
     cout<<endl;
     flux.CalculateICS();
     ICS=flux.GetICS();
@@ -411,7 +476,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     flux.PlotPhotonFlux();
 
     FileName="Flux_";
-    FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+    FileName.append(IFCalibrationFluxDataFile.substr(0,IFCalibrationFluxDataFile.size()-4));
     FileName.append(".log");
     out.SetFileName(FileName);
     out.FileChecker();
@@ -419,22 +484,67 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     out.WriteLog(PhotonFlux);
     FileName="";
 
+    FileName="Flux_FitParameters";
+    FileName.append(".log");
+    out.SetFileName(FileName);
+    out.FileChecker();
+    out.SetPreDataString("Scale ScaleLOW ScaleHIGH EndPoint EndPointLOW EndPointHIGH ProtonNumber");
+    out.WriteLog(flux.GetFittedParameters());
+    FileName="";
+
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
-        // DataReader::Print2DArray(flux.GetCalcEfficiencyExperimental[t]);
         FileName="Efficiency_";
         FileName.append(std::to_string((int)DetectorAngles[t]));
         FileName.append("_");
-        FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+        FileName.append(IFCalibrationFluxDataFile.substr(0,IFCalibrationFluxDataFile.size()-4));
         FileName.append(".log");
         out.SetFileName(FileName);
         out.FileChecker();
         out.SetPreDataString("Energy dEnergy Efficiency dmin_Efficiency dmax_Efficiency");
-        // out.WriteLog(flux.GetCalcEfficiencyExperimental[t]);
+        out.WriteLog(flux.GetCalcEfficiencyCalibrationData()[t]);
         FileName="";
     }
+
+    Gamma gamma;
+    gamma.SetRootFile(rootfile);
+    gamma.SetEfficiencyParameter(effi.GetFittedParameters());
+    gamma.SetFluxParameter(flux.GetFittedParameters());
+    gamma.SetDetectorAngles(DetectorAngles);
+    gamma.SetExperimentalData(ExperimentalData);
+    gamma.SetExperimentalDataAngular(ExperimentalDataAngular);
+    gamma.SetTargetMass(TargetMass);
+    gamma.SetEfficiencyFitParameterDistribution(effi.GetFitParameterDistribution());
+    gamma.SetFluxFitParameterDistribution(flux.GetFitParameterDistribution());
+    gamma.CalculateResults();
+
+    // FileName="Experimental_Flux_";
+    // FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+    // FileName.append(".log");
+    // out.SetFileName(FileName);
+    // out.FileChecker();
+    // out.SetPreDataString("Energy dEnergy Flux dmin_Flux dmax_Flux");
+    // out.WriteLog(gamma.GetCalculatedFlux());
+    // FileName="";
+
+    // for(unsigned int t=0;t<DetectorAngles.size();t++)
+    // {
+    //     FileName="Experimental_Efficiency";
+    //     FileName.append(std::to_string((int)DetectorAngles[t]));
+    //     FileName.append("_");
+    //     FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+    //     FileName.append(".log");
+    //     out.SetFileName(FileName);
+    //     out.FileChecker();
+    //     out.SetPreDataString("Energy dEnergy Efficiency dmin_Efficiency dmax_Efficiency");
+    //     out.WriteLog(gamma.GetCalculatedEfficiency()[t]);
+    //     FileName="";
+    // }
+
     
-}	
+}
+
+
 
 high_resolution_clock::time_point stop = high_resolution_clock::now();
 duration<double> delta_t = duration_cast< duration<double>>(stop - start);

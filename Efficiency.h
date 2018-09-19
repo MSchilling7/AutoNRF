@@ -73,13 +73,13 @@ public:
     void SetNThread(unsigned int t){NumberOfThreads=t;};
     void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
     void CalculateEfficiency();
-    void OrganizeData();
     void FitEfficiency();
     void PlotScaleDist();
     void PlotEFunc();
     
     vector<vector<double> >GetFittedParameters(){return Parameter_All;};
     vector<vector<vector<double> > >  GetEfficiencyDataArray(){return EfficiencyDataArray;};
+    vector<vector<double> > GetFitParameterDistribution(){return FitParameterDistribution;};
 private:
 
     //! Storing the threads:

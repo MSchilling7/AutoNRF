@@ -31,33 +31,17 @@ void DataReader::SetInputParameter()
 {
     std::string::size_type sz;
     vector<double> tempVector;
-    string ScourceFile;
-    string ECalFile;
-    string SimulationFile;
-    string FCalFile;
-    string ExperimentalDataFile;
-    double timeM;
-    string nfit_str,mass_str,dmass_str;
-    double scale;
-    double a0;
-    double a1;
-    double a2;
-    double a3;
-    double a4;
-    
-    double E0max;
-    double E0min;
-    double ProtonNumber;
-    double Angles;
-
     ifstream Filestream;
     Filestream.open(GetFileName(),std::ifstream::in);
-    if(Filestream.is_open()){
+    if(Filestream.is_open())
+    {
 //              file opened successfully so we are here
         cout  <<  "File Opened success!!! Reading Input Parameters from file into arrays"  <<  endl;
-        int currentline=0;
-        while(getline(Filestream,line)){
-            if(line[0] != '/' && line[1] != '/'){
+        while(getline(Filestream,line))
+        {
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/')
+            {
                 for(unsigned int i=0; i<line.size() ;i++)
                 {
                     if(line[i] == ',' || line[i] == ';')
@@ -65,110 +49,115 @@ void DataReader::SetInputParameter()
                         line[i]=' ';
                     };
                 }
-                
-                istringstream buffer(line);
-                if(currentline+2 %2 ==0)
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+
+
+                for(unsigned int i=0;i<3;i++)
                 {
-                    buffer >>
-                    ScourceFile           >>
-                    ECalFile              >>
-                    SimulationFile        >>
-                    nfit_str              >>
-                    scale                 >>
-                    a0                    >> 
-                    a1                    >> 
-                    a2                    >> 
-                    a3                    >> 
-                    a4                    ;
-                    
-                DataFileline.push_back(ScourceFile);                    //0
-                DataFileline.push_back(ECalFile);                       //1
-                DataFileline.push_back(SimulationFile);                 //2
-                tempVector.push_back((int)stod(nfit_str,&sz));     //0
-                tempVector.push_back(scale);    //1
-                tempVector.push_back(a0);       //2
-                tempVector.push_back(a1);       //3
-                tempVector.push_back(a2);       //4
-                tempVector.push_back(a3);       //5
-                tempVector.push_back(a4);       //6
+                    DataFileline.push_back(words1[i]);//Source ECal Sim
+                }
+                for(int i=3;i<10;i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));//NFit Scale a0 a1 a2 a3 a4
+                }
                 fitParameterarray_Efficency.push_back(tempVector);
                 tempVector.clear();
+                for(unsigned int i=10;i<words1.size();i++)
+                {
+                    ETimes.push_back(stod(words1[i],&sz));
+                }
+
+
                 for(;;)
                 {
-                    buffer>>timeM;
-                    if(!buffer.fail())ETimes.push_back(timeM);
-                    if(buffer.fail())break;
+                    getline(Filestream,line);
+                    if(line[0] != '/' && line[1] != '/')
+                    {
+                        for(unsigned int i=0; i<line.size() ;i++)
+                        {
+                            if(line[i] == ',' || line[i] == ';')
+                            {
+                                line[i]=' ';
+                            };
+                        }
+                        break;
+                    }
                 }
-            }
-            if(currentline+2 %2 !=0)
-            {
-                buffer>>
-                FCalFile>>
-                nfit_str>>
-                scale>>
-                E0min>>
-                E0max>>
-                ProtonNumber>>
-                mass_str>>
-                dmass_str>>
-                ExperimentalDataFile;
-                
-                
-                
-                DataFileline.push_back(FCalFile);                       //3
-                DataFileline.push_back(ExperimentalDataFile);           //4
-                tempVector.push_back((int)stod(nfit_str,&sz));           //0
-                tempVector.push_back(scale);                 //1
-                tempVector.push_back(E0min);                 //2
-                tempVector.push_back(E0max);                 //3
-                tempVector.push_back(ProtonNumber);          //4
-                tempVector.push_back(stod(mass_str,&sz));    //5
-                tempVector.push_back(stod(dmass_str,&sz));   //6
-                
-                for(;;)
+                istringstream buffer2(line);
+                vector<string> words2(std::istream_iterator<std::string>{buffer2},std::istream_iterator<std::string>());
+
+
+                for(unsigned int i=0;i<2;i++)
                 {
-                    buffer>>Angles;
-                    if(!buffer.fail())DetectorAngles.push_back(Angles);//7
-                    if(buffer.fail())break;
+                    DataFileline.push_back(words2[i]);
                 }
-                
+                for(unsigned int i=2;i<words2.size();i++)
+                {
+                    tempVector.push_back(stod(words2[i],&sz));//nfit scale emin emax protonnumber mass dmass
+                }
                 fitParameterarray_Flux.push_back(tempVector);
                 tempVector.clear();
-            }
-            
-            if(currentline+2 %2)
-            {
+
+                for(;;)
+                {
+                    getline(Filestream,line);
+                    if(line[0] != '/' && line[1] != '/')
+                    {
+                        for(unsigned int i=0; i<line.size() ;i++)
+                        {
+                            if(line[i] == ',' || line[i] == ';')
+                            {
+                                line[i]=' ';
+                            };
+                        }
+                        break;
+                    }
+                }
+
+                istringstream buffer3(line);
+                vector<string> words3(std::istream_iterator<std::string>{buffer3},std::istream_iterator<std::string>());
+
+                for(unsigned int i=0;i<2;i++)
+                {
+                    DataFileline.push_back(words3[i]);
+                }
+                for(unsigned int i=2;i<4;i++)
+                {
+                    Mass.push_back(stod(words3[i],&sz));
+                }
+                for(unsigned int i=4;i<words3.size();i++)
+                {
+                    DetectorAngles.push_back((int)stod(words3[i],&sz));
+                }
                 DataFilearray.push_back(DataFileline);
                 DataFileline.clear();
+
+
             }
-            
-            
-            
-            tempVector.clear();
-        }
-        if(line[0] == '/' && line[1] == '/')currentline=currentline-1;
-        currentline++;
-    };
-    cout  <<  "Your Parameters could be imported! Yeah!"  <<  endl;}
+        };
+        cout  <<  "Your Parameters could be imported! Yeah!"  <<  endl;
+    }
     else{cout  <<  "Noooope! Dont gimme a piece of crap!(InputParameter)"  <<  endl;std::exit(0);};
 }
 // ---------------------------------------------------------
 
 void DataReader::SetSourceData()
 {
+    std::string::size_type sz;
     vector<double> tempVector;
     vector<vector<double> > temp2DVector;
-    double sourceenergy;
-    double esourceenergy;
-    double sourceintensity;
-    double esourceintensity;
     ifstream Filestream;
     Filestream.open(GetFileName(),std::ifstream::in);
-    if(Filestream.is_open()){
+    if(Filestream.is_open())
+    {
 //              file opened successfully so we are here
         cout  <<  "File Opened success!!!y!!!. Reading Efficiency Calibration Data from file into array"  <<  endl;
-        while(getline(Filestream,line)){
-            if(line[0] != '/' && line[1] != '/'){
+        while(getline(Filestream,line))
+        {
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/')
+            {
                 for(unsigned int i=0; i<line.size() ;i++)
                 {
                     if(line[i] == ',' || line[i] == ';')
@@ -176,25 +165,18 @@ void DataReader::SetSourceData()
                         line[i]=' ';
                     };
                 }
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+                for(unsigned int i=0;i<words1.size();i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));
+                }
+                temp2DVector.push_back(tempVector);
+                tempVector.clear();
             }
-            istringstream buffer(line);
-            buffer >>
-            sourceenergy     >>
-            esourceenergy    >>
-            sourceintensity  >>
-            esourceintensity;
-            
-            
-            
-            tempVector.push_back(sourceenergy);
-            tempVector.push_back(esourceenergy);
-            tempVector.push_back(sourceintensity);
-            tempVector.push_back(esourceintensity);
-            
-            temp2DVector.push_back(tempVector);
-            tempVector.clear();
             if(line[0] == '/' && line[1] == '/')
             {
+                if(temp2DVector.empty())continue;
                 sort(temp2DVector.begin(),temp2DVector.end());
                 sData.push_back(temp2DVector);
                 temp2DVector.clear();
@@ -206,313 +188,349 @@ void DataReader::SetSourceData()
             sData.push_back(temp2DVector);
             temp2DVector.clear();
         }
-        cout  <<  "Source Data could be imported! Yeah!"  <<  endl;}
-        else{cout  <<  "Noooope! Dont gimme a piece of crap!(Source)"  <<  endl;std::exit(0);};
+        cout  <<  "Source Data could be imported! Yeah!"  <<  endl;
     }
+    else{cout  <<  "Noooope! Dont gimme a piece of crap!(Source)"  <<  endl;std::exit(0);};
+}
 
 // ---------------------------------------------------------
     
     
-    void DataReader::SetFluxCalibrationData()
-    {
-        vector<double> tempVector;
-        double Ex;
-        double Ef;
-        double EGamma;
-        double dEGamma;
-        double J0;
-        double J1;
-        double Gamma;
-        double dGamma;
-        double Branch;
-        double dBranch;
-        double W90;
-        double W130;
-        ifstream Filestream;
-        Filestream.open(GetFileName(),std::ifstream::in);
-        if(Filestream.is_open()){
-//              file opened successfully so we are here
-            cout  <<  "File Opened successfully!!! Reading Photon Flux Calibration Data from file into array"  <<  endl;
-            while(getline(Filestream,line))
+void DataReader::SetCalibrationFluxParameter()
+{
+    std::string::size_type sz;
+    vector<double> tempVector;
+    ifstream Filestream;
+    Filestream.open(GetFileName(),std::ifstream::in);
+    if(Filestream.is_open())
+    {   //              file opened successfully so we are here
+        cout  <<  "File Opened successfully!!! Reading Photon Flux Calibration Data from file into array"  <<  endl;
+        while(getline(Filestream,line))
+        {
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/')
             {
-                if(line[0] != '/' && line[1] != '/')
+                for(unsigned int i=0; i<line.size() ;i++)
                 {
-                    for(unsigned int i=0; i<line.size() ;i++)
+                    if(line[i] == ',' || line[i] == ';')
                     {
-                        if(line[i] == ',' || line[i] == ';')
-                        {
-                            line[i]=' ';
-                        };
-                    }
-                    istringstream buffer(line);
-                    buffer >>
-                    Ex         >>
-                    Ef         >>
-                    EGamma     >>
-                    dEGamma    >>
-                    J0         >>
-                    J1         >>
-                    Gamma      >>
-                    dGamma     >>
-                    Branch     >>
-                    dBranch    >>
-                    W90        >>
-                    W130;
-                    
-                    tempVector.push_back(Ex);
-                    tempVector.push_back(Ef);
-                    tempVector.push_back(EGamma);
-                    tempVector.push_back(dEGamma);
-                    tempVector.push_back(J0);
-                    tempVector.push_back(J1);
-                    tempVector.push_back(Gamma);
-                    tempVector.push_back(dGamma);
-                    tempVector.push_back(Branch);
-                    tempVector.push_back(dBranch);
-                    tempVector.push_back(W90);
-                    tempVector.push_back(W130);
-                    
-                    fluxcalibrationData.push_back(tempVector);
-                    tempVector.clear();
+                        line[i]=' ';
+                    };
                 }
-                sort(fluxcalibrationData.begin(),fluxcalibrationData.end());
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+                for(unsigned int i=0;i<words1.size();i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));
+                }
+
+                fluxcalibrationData.push_back(tempVector);
+                tempVector.clear();
             }
-            cout  <<  "Flux Calibration Data could be imported! Yeah!"  <<  endl;}
-            else{cout  <<  "Noooope! Dont gimme a piece of crap!(FluxCalibrationData)"  <<  endl;std::exit(0);};
+            sort(fluxcalibrationData.begin(),fluxcalibrationData.end());
         }
+        cout  <<  "Flux Calibration Parameter could be imported! Yeah!"  <<  endl;
+    }
+    else{cout  <<  "Noooope! Dont gimme a piece of crap!(FluxCalibrationData)"  <<  endl;std::exit(0);};
+}
 
 // ---------------------------------------------------------
         
-        void DataReader::SetECalData()
+void DataReader::SetECalData()
+{
+    std::string::size_type sz;
+    vector<double> tempVector;
+    vector<vector<double> > temp2DVector;
+    ifstream Filestream;
+    Filestream.open(GetFileName(),std::ifstream::in);
+    if(Filestream.is_open()){//              file opened successfully so we are here
+        cout  <<  "File Opened successfully!!! Reading Peak Data from file into array"  <<  endl;
+        while(getline(Filestream,line))
         {
-            vector<double> tempVector;
-            vector<vector<double> > temp2DVector;
-
-            double energyD;
-            double eenergyD;
-            double fwhmD;
-            double efwhmD;
-            double volumeD;
-            double evolumeD;
-            double tailleftD;
-            double etailleftD;
-            ifstream Filestream;
-            Filestream.open(GetFileName(),std::ifstream::in);
-            if(Filestream.is_open()){
-//              file opened successfully so we are here
-                cout  <<  "File Opened successfully!!! Reading Peak Data from file into array"  <<  endl;
-                while(getline(Filestream,line))
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/')
+            {
+                for(unsigned int i=0; i<line.size() ;i++)
                 {
-                    if(line[0] != '/' && line[1] != '/')
+                    if(line[i] == ',' || line[i] == ';')
                     {
-                        for(unsigned int i=0; i<line.size() ;i++)
-                        {
-                            if(line[i] == ',' || line[i] == ';')
-                            {
-                                line[i]=' ';
-                            };
-                        }
-                        istringstream buffer(line);
-                        buffer >>   energyD  >> 
-                        eenergyD  >> 
-                        fwhmD  >> 
-                        efwhmD  >> 
-                        volumeD  >> 
-                        evolumeD  >> 
-                        tailleftD  >> 
-                        etailleftD;
-                        
-                        tempVector.push_back(energyD);
-                        tempVector.push_back(eenergyD);
-                        tempVector.push_back(fwhmD);
-                        tempVector.push_back(efwhmD);
-                        tempVector.push_back(volumeD);
-                        tempVector.push_back(evolumeD);
-                        tempVector.push_back(tailleftD);
-                        tempVector.push_back(etailleftD);
-                        
-                        temp2DVector.push_back(tempVector);
-                        tempVector.clear();
-                    }
-                    if(line[0] == '/' && line[1] == '/')
+                        line[i]=' ';
+                    };
+                }
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+                for(unsigned int i=0;i<words1.size();i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));
+                }
+                temp2DVector.push_back(tempVector);
+                tempVector.clear();
+            }
+            if(line[0] == '/' && line[1] == '/')
+            {
+                if(temp2DVector.empty())continue;
+                sort(temp2DVector.begin(),temp2DVector.end());
+                ecalData.push_back(temp2DVector);
+                temp2DVector.clear();
+            }
+        }
+        if(!temp2DVector.empty())
+        {            
+            sort(temp2DVector.begin(),temp2DVector.end());
+            ecalData.push_back(temp2DVector);
+            temp2DVector.clear();
+        }
+        cout  <<  "Your Efficiency Data could be imported! Yeah!"  <<  endl;
+    }
+    else{cout  <<  "Noooope! Dont gimme a piece of crap!(ECalData)"  <<  endl;std::exit(0);};
+}
+
+// ---------------------------------------------------------
+void DataReader::SetExperimentalData()
+{                
+    std::string::size_type sz;
+    vector<double> tempVector;
+    vector<vector<double> > temp2DVector;
+    ifstream Filestream;
+    Filestream.open(GetFileName(),std::ifstream::in);
+    if(Filestream.is_open())
+    {   //              file opened successfully so we are here
+        cout  <<  "File Opened successfully!!! Reading Peak Data from file into array"  <<  endl;
+        while(getline(Filestream,line))
+        {
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/'){
+                for(unsigned int i=0; i<line.size() ;i++)
+                {
+                    if(line[i] == ',' || line[i] == ';')
                     {
-                        sort(temp2DVector.begin(),temp2DVector.end());
-                        ecalData.push_back(temp2DVector);
-                        temp2DVector.clear();
-                    }
+                        line[i]=' ';
+                    };
                 }
-                if(!temp2DVector.empty())
-                {            
-                    sort(temp2DVector.begin(),temp2DVector.end());
-                    ecalData.push_back(temp2DVector);
-                    temp2DVector.clear();
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+                for(unsigned int i=0;i<words1.size();i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));
                 }
-                cout  <<  "Your Data could be imported! Yeah!"  <<  endl;}
-                else{cout  <<  "Noooope! Dont gimme a piece of crap!(ECalData)"  <<  endl;std::exit(0);};
+                temp2DVector.push_back(tempVector);
+                tempVector.clear();
+            }
+            if(line[0] == '/' && line[1] == '/')
+            {
+                if(temp2DVector.empty())continue;
+                sort(temp2DVector.begin(),temp2DVector.end());
+                experimentalData.push_back(temp2DVector);
+                temp2DVector.clear();
             }
 
-// ---------------------------------------------------------
-            
-            void DataReader::SetExperimentalData()
-            {
-                
-                vector<double> tempVector;
-                vector<vector<double> > temp2DVector;
-                double energyD;
-                double eenergyD;
-                double fwhmD;
-                double efwhmD;
-                double volumeD;
-                double evolumeD;
-                double tailleftD;
-                double etailleftD;
-                
-                ifstream Filestream;
-                Filestream.open(GetFileName(),std::ifstream::in);
-                if(Filestream.is_open()){
-//              file opened successfully so we are here
-                    cout  <<  "File Opened successfully!!! Reading Peak Data from file into array"  <<  endl;
-                    while(getline(Filestream,line)){
-                        if(line[0] != '/' && line[1] != '/'){
-                            for(unsigned int i=0; i<line.size() ;i++)
-                            {
-                                if(line[i] == ',' || line[i] == ';')
-                                {
-                                    line[i]=' ';
-                                };
-                            }
-                            istringstream buffer(line);
-                            buffer >>
-                            energyD  >> 
-                            eenergyD  >> 
-                            fwhmD  >> 
-                            efwhmD  >> 
-                            volumeD  >> 
-                            evolumeD  >> 
-                            tailleftD  >> 
-                            etailleftD;
-                            
-                            tempVector.push_back(energyD);
-                            tempVector.push_back(eenergyD);
-                            tempVector.push_back(fwhmD);
-                            tempVector.push_back(efwhmD);
-                            tempVector.push_back(volumeD);
-                            tempVector.push_back(evolumeD);
-                            tempVector.push_back(tailleftD);
-                            tempVector.push_back(etailleftD);
-                            
-                            temp2DVector.push_back(tempVector);
-                            tempVector.clear();
-                        }
-                        if(line[0] == '/' && line[1] == '/')
-                        {
-                            sort(temp2DVector.begin(),temp2DVector.end());
-                            experimentalData.push_back(temp2DVector);
-                            temp2DVector.clear();
-                        }
-                    }
-                    if(!temp2DVector.empty())
-                    {            
-                        sort(temp2DVector.begin(),temp2DVector.end());
-                        experimentalData.push_back(temp2DVector);
-                        temp2DVector.clear();
-                    }
-                    cout  <<  "Your Data could be imported! Yeah!"  <<  endl;}
-                    else{cout  <<  "Noooope! Dont gimme a piece of crap!(PeakData)"  <<  endl;std::exit(0);};
-                }
+        }
+        if(!temp2DVector.empty())
+        {            
+            sort(temp2DVector.begin(),temp2DVector.end());
+            experimentalData.push_back(temp2DVector);
+            temp2DVector.clear();
+        }
+        cout  <<  "Your Experimental Data could be imported! Yeah!"  <<  endl;
+    }
+    else{cout  <<  "Noooope! Dont gimme a piece of crap!(PeakData)"  <<  endl;std::exit(0);};
+}
 
 // ---------------------------------------------------------
-
-                void DataReader::SetSimulationData()
+void DataReader::SetCalibrationFluxData()
+{                
+    std::string::size_type sz;
+    vector<double> tempVector;
+    vector<vector<double> > temp2DVector;
+    ifstream Filestream;
+    Filestream.open(GetFileName(),std::ifstream::in);
+    if(Filestream.is_open())
+    {   //              file opened successfully so we are here
+        cout  <<  "File Opened successfully!!! Reading Peak Data from file into array"  <<  endl;
+        while(getline(Filestream,line))
+        {
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/'){
+                for(unsigned int i=0; i<line.size() ;i++)
                 {
-                    vector<double> tempVector;
-                    vector<vector<double> > temp2DVector;
-                    double energyS;
-                    double volumeS;
-
-                    ifstream Filestream;
-                    Filestream.open(GetFileName(),std::ifstream::in);
-                    if(Filestream.is_open()){
-//              file opened successfully so we are here
-                        cout  <<  "File Opened successfully!!! Reading Simulation Data from file into array"  <<  endl;
-                        while(getline(Filestream,line))
-                        {
-                            if(line[0] != '/' && line[1] != '/')
-                            {
-                                for(unsigned int i=0; i<line.size() ;i++)
-                                {
-                                    if(line[i] == ',' || line[i] == ';')
-                                    {
-                                        line[i]=' ';
-                                    };
-                                }
-                                istringstream buffer(line);
-                                buffer >>   energyS  >> 
-                                volumeS;
-                                
-                                tempVector.push_back(energyS);
-                                tempVector.push_back(volumeS);
-                                
-                                temp2DVector.push_back(tempVector);
-                                tempVector.clear();
-                            }
-                            if(line[0] == '/' && line[1] == '/')
-                            {
-                                sort(temp2DVector.begin(),temp2DVector.end());
-                                simulationData.push_back(temp2DVector);
-                                temp2DVector.clear();
-                            }
-                        }
-                        if(!temp2DVector.empty())
-                        {            
-                            sort(temp2DVector.begin(),temp2DVector.end());
-                            simulationData.push_back(temp2DVector);
-                            temp2DVector.clear();
-                        }
-                        cout  <<  "Your Data could be imported! Yeah!"  <<  endl;}
-                        else{cout  <<  "Noooope! Dont gimme a piece of crap!(SimulationData)"  <<  endl;std::exit(0);};
-                    }
-
-// ---------------------------------------------------------
-
-                    void DataReader::Print2DArray(vector<vector<double> > array){
-                        for(unsigned int i=0;i<array.size();i++)
-                        {
-                            for(unsigned int j=0;j<array[i].size();j++){
-                                cout  << std::scientific <<  setw(15)  <<  array[i][j];
-                            }
-                            cout  <<  endl;
-                        }
-                        cout <<endl;
-                    };
-
-// ---------------------------------------------------------
-
-                    void DataReader::Print3DArray(vector<vector<vector<double> > > array)
+                    if(line[i] == ',' || line[i] == ';')
                     {
-                        for(unsigned int i=0;i<array.size();i++)
-                        {
-                            Print2DArray(array[i]);
-                            cout<<endl<<endl;
-                        }
-                    }
-
-// ---------------------------------------------------------
-
-                    void DataReader::Print1DArray(vector<int> array){
-                        for(unsigned int i=0;i<array.size();i++)cout  << std::scientific <<  array[i]  <<  endl;
-                            cout<<endl;
+                        line[i]=' ';
                     };
+                }
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+                for(unsigned int i=0;i<words1.size();i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));
+                }
+                temp2DVector.push_back(tempVector);
+                tempVector.clear();
+            }
+            if(line[0] == '/' && line[1] == '/')
+            {
+                if(temp2DVector.empty())continue;
+                sort(temp2DVector.begin(),temp2DVector.end());
+                calibrationfluxdata.push_back(temp2DVector);
+                temp2DVector.clear();
+            }
+            
+        }
+        if(!temp2DVector.empty())
+        {            
+            sort(temp2DVector.begin(),temp2DVector.end());
+            calibrationfluxdata.push_back(temp2DVector);
+            temp2DVector.clear();
+        }
+        cout  <<  "Your Flux Calibration Data could be imported! Yeah!"  <<  endl;
+    }
+    else{cout  <<  "Noooope! Dont gimme a piece of crap!(FluxCalibrationData)"  <<  endl;std::exit(0);};
+}
 
 // ---------------------------------------------------------
 
-                    void DataReader::Print1DArray(vector<double> array){
-                        for(unsigned int i=0;i<array.size();i++)cout  << std::scientific <<  array[i]  <<  endl;
-                            cout<<endl;
-                        
-};// ---------------------------------------------------------
+void DataReader::SetSimulationData()
+{
+    std::string::size_type sz;
+    vector<double> tempVector;
+    vector<vector<double> > temp2DVector;
+    ifstream Filestream;
+    Filestream.open(GetFileName(),std::ifstream::in);
+    if(Filestream.is_open())
+    {   //              file opened successfully so we are here
+        cout  <<  "File Opened successfully!!! Reading Simulation Data from file into array"  <<  endl;
+        while(getline(Filestream,line))
+        {
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/')
+            {
+                for(unsigned int i=0; i<line.size() ;i++)
+                {
+                    if(line[i] == ',' || line[i] == ';')
+                    {
+                        line[i]=' ';
+                    };
+                }
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+                for(unsigned int i=0;i<words1.size();i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));
+                }
+                temp2DVector.push_back(tempVector);
+                tempVector.clear();
+            }
+            if(line[0] == '/' && line[1] == '/')
+            {
+                if(temp2DVector.empty())continue;
+                sort(temp2DVector.begin(),temp2DVector.end());
+                simulationData.push_back(temp2DVector);
+                temp2DVector.clear();
+            }
+            
+        }
+        if(!temp2DVector.empty())
+        {            
+            sort(temp2DVector.begin(),temp2DVector.end());
+            simulationData.push_back(temp2DVector);
+            temp2DVector.clear();
+        }
+        cout  <<  "Your Simulation Data could be imported! Yeah!"  <<  endl;
+    }
+    else{cout  <<  "Noooope! Dont gimme a piece of crap!(SimulationData)"  <<  endl;std::exit(0);};
+}
 
-void DataReader::Print1DArray(vector<string> array){
+
+
+// ---------------------------------------------------------
+
+void DataReader::SetAngularDistribution()
+{
+    std::string::size_type sz;
+    vector<double> tempVector;
+    ifstream Filestream;
+    Filestream.open(GetFileName(),std::ifstream::in);
+    if(Filestream.is_open())
+    {   //              file opened successfully so we are here
+        cout  <<  "File Opened successfully!!! Reading AngularDistribution Data from file into array"  <<  endl;
+        while(getline(Filestream,line))
+        {
+            if(line.empty())continue;
+            if(line[0] != '/' && line[1] != '/')
+            {
+                for(unsigned int i=0; i<line.size() ;i++)
+                {
+                    if(line[i] == ',' || line[i] == ';')
+                    {
+                        line[i]=' ';
+                    };
+                }
+                istringstream buffer1(line);
+                vector<string> words1(std::istream_iterator<std::string>{buffer1},std::istream_iterator<std::string>());
+                for(unsigned int i=0;i<words1.size();i++)
+                {
+                    tempVector.push_back(stod(words1[i],&sz));
+                }
+                experimentalDataAngular.push_back(tempVector);
+                tempVector.clear();
+            }
+            if(line[0] == '/' && line[1] == '/')
+            {
+                continue;
+            }
+            
+        }
+        sort(experimentalDataAngular.begin(),experimentalDataAngular.end());
+        cout  <<  "Your AngularDistribution Data could be imported! Yeah!"  <<  endl;
+    }
+    else{cout  <<  "Noooope! Dont gimme a piece of crap!(AngularDistribution)"  <<  endl;std::exit(0);};
+}
+
+
+// ---------------------------------------------------------
+
+void DataReader::Print2DArray(vector<vector<double> > array){
+    for(unsigned int i=0;i<array.size();i++)
+    {
+        for(unsigned int j=0;j<array[i].size();j++){
+            cout  << std::scientific <<  setw(15)  <<  array[i][j];
+        }
+        cout  <<  endl;
+    }
+    cout <<endl;
+};
+
+// ---------------------------------------------------------
+
+void DataReader::Print3DArray(vector<vector<vector<double> > > array)
+{
+    for(unsigned int i=0;i<array.size();i++)
+    {
+        Print2DArray(array[i]);
+        cout<<endl<<endl;
+    }
+}
+
+// ---------------------------------------------------------
+
+void DataReader::Print1DArray(vector<int> array)
+{
+    for(unsigned int i=0;i<array.size();i++)cout  << std::scientific <<  array[i]  <<  endl;
+    cout<<endl;
+};
+
+// ---------------------------------------------------------
+
+void DataReader::Print1DArray(vector<double> array)
+{
+    for(unsigned int i=0;i<array.size();i++)cout  << std::scientific <<  array[i]  <<  endl;
+    cout<<endl;
+};
+
+// ---------------------------------------------------------
+
+void DataReader::Print1DArray(vector<string> array)
+{
     for(unsigned int i=0;i<array.size();i++)cout  <<  array[i]  <<  endl;
-        cout<<endl;
+    cout<<endl;
 };

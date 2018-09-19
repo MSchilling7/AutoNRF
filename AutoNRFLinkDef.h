@@ -6,7 +6,8 @@
 #pragma link C++ class ReadData+;
 #pragma link C++ class Functions+;
 #pragma link C++ class Efficency+;
-#pragma link C++ class Output+;
 #pragma link C++ class Flux+;
+#pragma link C++ class Gamma+;
+#pragma link C++ class Output+;
 
 #endif

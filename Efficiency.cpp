@@ -47,14 +47,12 @@ Efficiency::~Efficiency()
 void Efficiency::CalculateEfficiency()
 {
     if(sData.size()==1)for(unsigned int i=0;i<ECalTime.size();i++)sData.push_back(sData[0]);
-    DataReader read;
-    Functions func;
-    vector<int>sortinglist;
+    vector<unsigned int>sortinglist;
     vector<double> tempVector;
     vector<vector<double> > temp2DVector;
     for(unsigned int t=0;t<ECalTime.size();t++)
     {
-        sortinglist=func.Maching2Doubles(ecalData[t],0,'C',sData[t],0,'C');
+        sortinglist=Functions::Maching2Doubles(ecalData[t],0,'C',sData[t],0,'C');
         
         for(unsigned int i=0;i<ecalData[t].size();i++)
         {
@@ -70,13 +68,6 @@ void Efficiency::CalculateEfficiency()
         temp2DVector.clear();
     }
 };
-
-// ---------------------------------------------------------
-
-void Efficiency::OrganizeData()
-{
-
-}
 
 // ---------------------------------------------------------
 
@@ -344,8 +335,7 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             ScalingParameter.Draw("");
             b_lower.Draw("same");
             b_upper.Draw("same");
-
-            string str=Output::dir+"Efficiency_Scale_";
+            string str=Output::dir+"Efficiency/Efficiency_Scale_";
             str.append(FileName);
             str.append("_");
             str.append(std::to_string((int)DetectorAngles[t]));
@@ -490,7 +480,7 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         legend->Draw();
         
 
-        string str=Output::dir+"Efficiency_Fit_";
+        string str=Output::dir+"Efficiency/Efficiency_Fit_";
         str.append(std::to_string((int)DetectorAngles[t]));
         str.append("_");
         str.append(FileName);
