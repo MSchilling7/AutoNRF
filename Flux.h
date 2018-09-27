@@ -14,7 +14,7 @@
 #include <TMultiGraph.h>
 #include <TRandom3.h>
 #include <TF1.h>
-#include <TGraphErrors.h>
+#include <TGraphAsymmErrors.h>
 #include <TFrame.h>
 #include <TLegend.h>
 
@@ -133,7 +133,6 @@ private:
     vector<double> Parameter_Flux,DetectorAngles;
     vector<double> ScaleParameter,EndPointParameter,FittedParameters;
     vector<vector<double> > Parameter_Efficiency;
-    const double hqc= 197.3269788*1000;//keV fm
     
 
 };

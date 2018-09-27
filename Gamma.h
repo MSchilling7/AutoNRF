@@ -14,13 +14,19 @@
 #include <TF1.h>
 #include <TFile.h>
 #include <TLine.h>
+#include <TCanvas.h>
+#include <TFrame.h>
+#include <thread>
+#include <chrono>
 
 #include "Functions.h"
 #include "DataReader.h"
+#include "Output.h"
 
 using std::vector;
 using std::endl;
 using std::cout;
+using std::thread;
 
 class Gamma
 {
@@ -42,6 +48,7 @@ public:
     void SetExperimentalDataAngular(vector<vector<double> >data){ExperimentalDataAngular=data;}
     void SetFluxFitParameterDistribution(vector<vector<double> > data){FluxFitParameterDistribution=data;};
     void SetEfficiencyFitParameterDistribution(vector<vector<double> > data){EfficiencyFitParameterDistribution=data;};
+    void SetNThread(unsigned int t){NumberOfThreads=t;};
     void SetRootFile(string str){rfile=str;}
     void CalculateResults();
 
@@ -55,11 +62,16 @@ private:
     void SortExperimentalData();
     void CalculateEnergyResults();
     void CalculateICSResults();
-
+    void CalculateICSDist(unsigned int ID,unsigned int fits);
     double GimmeICS(double area,double mass,double flux,double efficiency,double W);
+    
+    thread CalcICSDistThread(unsigned int ID,unsigned int fits){return thread([=]{CalculateICSDist(ID,fits);});}
+
 
     string rfile;
+    unsigned int NumberOfThreads;
     vector<double> Mass;
+    vector<unsigned int> Percent;
     vector<double> DetectorAngles;
     vector<double> Parameter_Flux;
     vector<vector<double> > Parameter_Efficiency;

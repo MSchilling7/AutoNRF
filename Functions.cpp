@@ -194,7 +194,7 @@ double Functions::relError2(vector <double> a,int posVal, int posError)
   {
     double temp;
     temp= a[posError]/a[posVal];
-    return pow(temp,2);
+    return temp*temp;
   }
 
 

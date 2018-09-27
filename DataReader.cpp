@@ -94,7 +94,7 @@ void DataReader::SetInputParameter()
                 }
                 for(unsigned int i=2;i<words2.size();i++)
                 {
-                    tempVector.push_back(stod(words2[i],&sz));//nfit scale emin emax protonnumber mass dmass
+                    tempVector.push_back(stod(words2[i],&sz));//nfit scale emin emax protonnumber mass dmass LifeTimes;
                 }
                 fitParameterarray_Flux.push_back(tempVector);
                 tempVector.clear();
@@ -122,11 +122,11 @@ void DataReader::SetInputParameter()
                 {
                     DataFileline.push_back(words3[i]);
                 }
-                for(unsigned int i=2;i<4;i++)
+                for(unsigned int i=2;i<5;i++)
                 {
                     Mass.push_back(stod(words3[i],&sz));
                 }
-                for(unsigned int i=4;i<words3.size();i++)
+                for(unsigned int i=5;i<words3.size();i++)
                 {
                     DetectorAngles.push_back((int)stod(words3[i],&sz));
                 }

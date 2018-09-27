@@ -170,7 +170,7 @@ void Efficiency::CallParallelEfficiencyFitThread(void* Address)
 
 bool Efficiency::EfficiencyFitter(unsigned int NThread)
 {
-    double Scale;
+    double Scale=0;
     string equal="==========";
     string space="          ";
     bool percent[128]={false};

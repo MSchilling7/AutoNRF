@@ -22,10 +22,10 @@ Gamma::~Gamma()
 void Gamma::CalculateResults()
 {
     SortExperimentalData();
-    // CalculateEnergyResults();
-    // CalculateFluxResults();
-    // CalculateEfficiencyResults();
-    // CalculateICSResults();
+    CalculateEnergyResults();
+    CalculateFluxResults();
+    CalculateEfficiencyResults();
+    CalculateICSResults();
 }
 
 // ---------------------------------------------------------
@@ -229,14 +229,14 @@ void Gamma::SortExperimentalData()
             }
         }
     }
-    for(unsigned int i = 0;i<ExperimentalDataSorted.size();++i)
-    {
-        for(unsigned int j=0;j<ExperimentalDataSorted[i].size();++j)
-        {
-            cout<<std::setw(15)<<ExperimentalDataSorted[i][j][0];
-        }
-        cout<<endl;
-    }
+    // for(unsigned int i = 0;i<ExperimentalDataSorted.size();++i)
+    // {
+        // for(unsigned int j=0;j<ExperimentalDataSorted[i].size();++j)
+        // {
+            // cout<<std::setw(15)<<ExperimentalDataSorted[i][j][0];
+        // }
+        // cout<<endl;
+    // }
 
 }
 
@@ -249,20 +249,19 @@ double Gamma::GimmeICS(double area,double mass,double flux,double efficiency,dou
     return val;
 }
 
-// ---------------------------------------------------------
+// --------------------------------------------------------
 
-void Gamma::CalculateICSResults()
+void Gamma::CalculateICSDist(unsigned int ID,unsigned int fits)
 {
-
-    TH1D EfficiencyDist[EfficiencyFitParameterDistribution.size()];
-    TH1D FluxDist[FluxFitParameterDistribution.size()];
-    TH1D ICSHist[ExperimentalDataSorted.size()];
-
+    cout<<"Thread "<<ID<<" is running"<<endl;
     unsigned int NumberofParameters = 3;
     TF1 FluxFunc("FluxFunc",Functions::Schiff, 0, 10000,NumberofParameters);
 
     NumberofParameters = 6;
     TF1 EfficiencyFunc("EfficiencyFunc",Functions::knoll, 0, 10000,NumberofParameters);
+
+    TH1D EfficiencyDist[EfficiencyFitParameterDistribution.size()];
+    TH1D FluxDist[FluxFitParameterDistribution.size()];
 
     double min;
     double max;
@@ -280,76 +279,141 @@ void Gamma::CalculateICSResults()
         FluxDist[i]=TH1D("","",100,min,max);
         for(unsigned int j=0;j<FluxFitParameterDistribution[i].size();++j)FluxDist[i].Fill(FluxFitParameterDistribution[i][j]);
     }
+
     TRandom3 random(0);
-    double energy;
-    double mass;
-    double flux;
-    double efficiency;
-    double area;
-    double W;
-    double ICSVal;
-    vector<double>tempVector;
+    double energy=0;
+    double mass=0;
+    double flux=0;
+    double efficiency=0;
+    double area=0;
+    double W=0;
+    double ICSVal=0;
+    unsigned int IDFit=0;
+    bool percent[128];
+
+
 
     vector<unsigned int> minlist;
-
-    unsigned int maxFits=(unsigned int)std::max(EfficiencyFitParameterDistribution[0].size(),FluxFitParameterDistribution[0].size());
+    for(unsigned int l=0;l<fits;++l)
+    {
         for(unsigned int i =0;i<ExperimentalDataSorted.size();++i)
         {
             minlist=Functions::Maching2Doubles(ExperimentalDataSorted[i],0,'C',ExperimentalDataAngular,0,'C');
+            IDFit=l;
             for(unsigned int j = 0; j < ExperimentalDataSorted[i].size(); ++j)
             {
-                for(unsigned int k=0;k<maxFits;++k)
+                energy=random.Gaus(ExperimentalDataSorted[i][j][0],ExperimentalDataSorted[i][j][1]);
+                area=random.Gaus(ExperimentalDataSorted[i][j][4],ExperimentalDataSorted[i][j][5]);
+                mass=random.Gaus(Mass[0],Mass[1]);
+                FluxFunc.SetParameter(0,FluxDist[0].GetRandom());
+                FluxFunc.SetParameter(1,FluxDist[1].GetRandom());
+                FluxFunc.SetParameter(2,Parameter_Flux[6]);
+                flux=FluxFunc.Eval(energy);
+                EfficiencyFunc.SetParameter(0,EfficiencyDist[j].GetRandom());
+                for(unsigned int m =1;l<Parameter_Efficiency[j].size();++l)EfficiencyFunc.SetParameter(m,Parameter_Efficiency[j][m]);
+                efficiency=EfficiencyFunc.Eval(energy);
+                W=ExperimentalDataAngular[minlist[j]][j+1];
+                ICSVal+=GimmeICS(area,mass,flux,efficiency,W);
+                // if(j==0 && i==0)cout<<std::setw(15)<<ICSVal<<std::setw(15)<<energy<<std::setw(15)<<area<<std::setw(15)<<mass<<std::setw(15)<<flux<<std::setw(15)<<efficiency<<std::setw(15)<<W<<endl;
+            }   
+            ICSVal=ICSVal/((double)ExperimentalDataSorted[i].size());
+            ICSDist[i][l+ID*fits]=ICSVal;
+            ICSVal=0;
+
+            for(unsigned int j=1;j<101;++j)
+            {
+                if((unsigned int)(j*fits/100.)==IDFit+1 && percent[j]==false)
                 {
-                    energy=random.Gaus(ExperimentalDataSorted[i][j][0],ExperimentalDataSorted[i][j][1]);
-                    area=random.Gaus(ExperimentalDataSorted[i][j][4],ExperimentalDataSorted[i][j][5]);
-                    mass=random.Gaus(Mass[0],Mass[1]);
-                    FluxFunc.SetParameter(0,FluxDist[0].GetRandom());
-                    FluxFunc.SetParameter(1,FluxDist[1].GetRandom());
-                    FluxFunc.SetParameter(2,Parameter_Flux[6]);
-                    flux=FluxFunc.Eval(energy);
-                    EfficiencyFunc.SetParameter(0,EfficiencyDist[j][0]);
-                    for(unsigned int l =1;l<Parameter_Efficiency[j].size();++l)EfficiencyFunc.SetParameter(l,Parameter_Efficiency[j][l]);
-                    efficiency=EfficiencyFunc.Eval(energy);
-                    W=ExperimentalDataAngular[minlist[j]][j];
-                    ICSVal+=GimmeICS(area,mass,flux,efficiency,W);
-                }   
-                ICSVal=ICSVal/((double)ExperimentalDataSorted[i].size());
-                tempVector.push_back(ICSVal);
+                    Percent[ID]=j;
+                    unsigned int val=0;
+                    for(unsigned int p=0;p<NumberOfThreads;++p)val+=Percent[p];
+                    Percent[Percent.size()-1]=val/NumberOfThreads;
+                    cout<<"\r";
+                    for(unsigned int p=0;p<NumberOfThreads;++p)
+                        {
+                            cout<<std::fixed<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
+                        }
+                        cout<<"Total: "<<std::fixed<<Percent[Percent.size()-1]<<"%";
+                        cout<<std::flush;
+                    percent[j]=true;
+                    break;
+                }
             }
-            ICSDist.push_back(tempVector);
-            tempVector.clear();
         }
+    }
+}
 
-        
-    // TFile* RFile=TFile::Open(rfile.c_str(),"update");
-    // RFile->mkdir("Results/ICS");
-    // RFile->cd("Results/ICS");
-    // string NameOfHist="";
-    // double boundary[2]={0,0};
-    // for(unsigned int i =0;i<Energy.size();++i)
-    // {
-    //     min=TMath::MinElement(ICSDist[i].size(),&ICSDist[i][0]);
-    //     max=TMath::MaxElement(ICSDist[i].size(),&ICSDist[i][0]);
-    //     NameOfHist=std::to_string(Energy[i][0]);
-    //     NameOfHist+=" keV Peak";
-    //     ICSHist[i]=TH1D(NameOfHist.c_str(),NameOfHist.c_str(),100,min,max);
-    //     for(unsigned int j=0;j<ICSDist[i].size();++j)ICSHist[i].Fill(ICSDist[i][j]);
-    //     Functions::ShortestCoverage(ICSDist[i],boundary);
+// ---------------------------------------------------------
 
-    //     max=ICSHist[i].GetMaximum();
-    //     ICSHist[i].SetMaximum(YSCALE*max);
+void Gamma::CalculateICSResults()
+{
+    cout<<"Calculate Integrated Cross Sections..."<<endl;
+    double u=1.660539e-24;//   (#/g)
+    Mass[0]=Mass[0]/(Mass[2]*u);
+    Mass[1]=Mass[1]/(Mass[2]*u);
+    double min=0,max=0;
 
-    //     TLine b_lower(boundary[0],0,boundary[0],ICSHist[i].GetMaximum());
-    //     TLine b_upper(boundary[1],0,boundary[1],ICSHist[i].GetMaximum());
+    TH1D ICSHist[ExperimentalDataSorted.size()];
+    Percent.resize(NumberOfThreads+1);
 
-    //     b_lower.SetLineColor(2);
-    //     b_lower.SetLineWidth(2);
+    unsigned int maxFits=(unsigned int)std::max(EfficiencyFitParameterDistribution[0].size(),FluxFitParameterDistribution[0].size());
+    ICSDist.resize(ExperimentalDataSorted.size());
+    for(unsigned int i = 0; i < ICSDist.size(); ++i)ICSDist[i].resize(maxFits);
+    unsigned int FitsperThread=(unsigned int) maxFits/NumberOfThreads;
 
-    //     b_upper.SetLineColor(2);
-    //     b_upper.SetLineWidth(2);
+    thread t[NumberOfThreads];
+    for(unsigned int i=0;i<NumberOfThreads;++i)
+    {
+        t[i]=CalcICSDistThread(i,FitsperThread);
+        std::this_thread::sleep_for (std::chrono::milliseconds(1));
+    }
+    for(unsigned int i=0;i<NumberOfThreads;++i)t[i].join();
+    cout<<endl;
 
+    
+    TFile* RFile=TFile::Open(rfile.c_str(),"update");
+    RFile->mkdir("Results/ICS");
+    RFile->cd("Results/ICS");
+    string NameOfHist="";
+    double boundary[2]={0,0};
+    for(unsigned int i =0;i<Energy.size();++i)
+    {
+        min=TMath::MinElement(ICSDist[i].size(),&ICSDist[i][0]);
+        max=TMath::MaxElement(ICSDist[i].size(),&ICSDist[i][0]);
+        NameOfHist=std::to_string((int)Energy[i][0]);
+        NameOfHist+="_keV_Peak";
+        ICSHist[i]=TH1D(NameOfHist.c_str(),NameOfHist.c_str(),100,min,max);
+        for(unsigned int j=0;j<ICSDist[i].size();++j)ICSHist[i].Fill(ICSDist[i][j]);
+        Functions::ShortestCoverage(ICSDist[i],boundary);
 
-    // }
+        max=ICSHist[i].GetMaximum();
+        ICSHist[i].SetMaximum(YSCALE*max);
+
+        TLine b_lower(boundary[0],0,boundary[0],ICSHist[i].GetMaximum());
+        TLine b_upper(boundary[1],0,boundary[1],ICSHist[i].GetMaximum());
+
+        b_lower.SetLineColor(2);
+        b_lower.SetLineWidth(2);
+
+        b_upper.SetLineColor(2);
+        b_upper.SetLineWidth(2);
+
+        TCanvas Can_ICSHist(NameOfHist.c_str(),NameOfHist.c_str(),1600,900);
+        Can_ICSHist.SetGrid();
+        Can_ICSHist.GetFrame()->SetFillColor(21);
+        Can_ICSHist.GetFrame()->SetBorderSize(12);
+
+        ICSHist[i].Draw("");
+        b_lower.Draw("same");
+        b_upper.Draw("same");
+
+        Can_ICSHist.Write();
+        ICSHist[i].Write();
+        NameOfHist=Output::dir+"Results/ICS_"+NameOfHist;
+        NameOfHist+=".pdf";
+        Can_ICSHist.SaveAs(NameOfHist.c_str());
+        cout<<"Distribution of ICS saved. ( "<<NameOfHist<<" )"<<endl;
+    }
 
 
 }

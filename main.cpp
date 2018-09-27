@@ -281,7 +281,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         {
             read.SetInputName("ECalData.dat");
             IECalibrationDataFile="ECalData.dat";
-            read.SetExperimentalData();
+            read.SetECalData();
             ECalData=read.GetExperimentalDataArray();
         }    
         // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
@@ -412,7 +412,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     string FileName="";
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
-        FileName="Efficiency_";
+        FileName="Efficiency/Efficiency_";
         FileName.append(std::to_string((int)DetectorAngles[t]));
         FileName.append("_");
         FileName.append(IECalibrationDataFile.substr(0,IECalibrationDataFile.size()-4));
@@ -429,7 +429,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
 
-        FileName="Efficiency_";
+        FileName="Efficiency/Efficiency_";
         FileName.append(std::to_string((int)DetectorAngles[t]));
         FileName.append("_FitParameters");
         FileName.append(".log");
@@ -460,8 +460,8 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     flux.CalculateEfficiencyforCalibrationData();
     flux.CorrectingPeakArea();
     CalibrationFluxData=flux.GetCalibrationData();
-    cout<<"Corrected PeakAreas:"<<endl<<endl;
-    read.Print3DArray(CalibrationFluxData);
+    // cout<<"Corrected PeakAreas:"<<endl<<endl;
+    // read.Print3DArray(CalibrationFluxData);
     cout<<endl;
     flux.CalculateICS();
     ICS=flux.GetICS();
@@ -475,7 +475,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     flux.PlotFitParameters();
     flux.PlotPhotonFlux();
 
-    FileName="Flux_";
+    FileName="Flux/Flux_";
     FileName.append(IFCalibrationFluxDataFile.substr(0,IFCalibrationFluxDataFile.size()-4));
     FileName.append(".log");
     out.SetFileName(FileName);
@@ -484,7 +484,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     out.WriteLog(PhotonFlux);
     FileName="";
 
-    FileName="Flux_FitParameters";
+    FileName="Flux/Flux_FitParameters";
     FileName.append(".log");
     out.SetFileName(FileName);
     out.FileChecker();
@@ -494,7 +494,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
 
     for(unsigned int t=0;t<DetectorAngles.size();t++)
     {
-        FileName="Efficiency_";
+        FileName="Flux/Efficiency_";
         FileName.append(std::to_string((int)DetectorAngles[t]));
         FileName.append("_");
         FileName.append(IFCalibrationFluxDataFile.substr(0,IFCalibrationFluxDataFile.size()-4));
@@ -508,6 +508,7 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
 
     Gamma gamma;
     gamma.SetRootFile(rootfile);
+    gamma.SetNThread(TNumber);
     gamma.SetEfficiencyParameter(effi.GetFittedParameters());
     gamma.SetFluxParameter(flux.GetFittedParameters());
     gamma.SetDetectorAngles(DetectorAngles);
@@ -518,34 +519,40 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     gamma.SetFluxFitParameterDistribution(flux.GetFitParameterDistribution());
     gamma.CalculateResults();
 
-    // FileName="Experimental_Flux_";
-    // FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
-    // FileName.append(".log");
-    // out.SetFileName(FileName);
-    // out.FileChecker();
-    // out.SetPreDataString("Energy dEnergy Flux dmin_Flux dmax_Flux");
-    // out.WriteLog(gamma.GetCalculatedFlux());
-    // FileName="";
+    FileName="Results/Experimental_Flux_";
+    FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+    FileName.append(".log");
+    out.SetFileName(FileName);
+    out.FileChecker();
+    out.SetPreDataString("Energy dEnergy Flux dmin_Flux dmax_Flux");
+    out.WriteLog(gamma.GetCalculatedFlux());
+    FileName="";
 
-    // for(unsigned int t=0;t<DetectorAngles.size();t++)
-    // {
-    //     FileName="Experimental_Efficiency";
-    //     FileName.append(std::to_string((int)DetectorAngles[t]));
-    //     FileName.append("_");
-    //     FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
-    //     FileName.append(".log");
-    //     out.SetFileName(FileName);
-    //     out.FileChecker();
-    //     out.SetPreDataString("Energy dEnergy Efficiency dmin_Efficiency dmax_Efficiency");
-    //     out.WriteLog(gamma.GetCalculatedEfficiency()[t]);
-    //     FileName="";
-    // }
+    for(unsigned int t=0;t<DetectorAngles.size();t++)
+    {
+        FileName="Results/Experimental_Efficiency";
+        FileName.append(std::to_string((int)DetectorAngles[t]));
+        FileName.append("_");
+        FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+        FileName.append(".log");
+        out.SetFileName(FileName);
+        out.FileChecker();
+        out.SetPreDataString("Energy dEnergy Efficiency dmin_Efficiency dmax_Efficiency");
+        out.WriteLog(gamma.GetCalculatedEfficiency()[t]);
+        FileName="";
+    }
 
     
 }
 
+string join="gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dAutoRotatePages=/None -sOutputFile=";
+join+=Output::dir;
+join+="final.pdf ";
+join+=Output::dir;
+join+="*/*.pdf ";
 
 
+system(join.c_str());
 high_resolution_clock::time_point stop = high_resolution_clock::now();
 duration<double> delta_t = duration_cast< duration<double>>(stop - start);
 cout <<std::fixed<< endl <<  "> main.cpp: Execution took " << delta_t.count() << " seconds" << endl<<endl;

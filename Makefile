@@ -1,8 +1,8 @@
 CXX       = /usr/bin/g++
 #flags for the actual compilation
-CXXFLAGS  = -fPIC -isystem$(shell root-config --incdir)  -pthread -std=c++11 -g -ggdb -Wall -Wextra -Wconversion -Wshadow -I/usr/include 
+CXXFLAGS  = -fPIC -isystem$(shell root-config --incdir) -std=c++11 -g -fopenmp -ggdb -Wall -Wextra -Wconversion -Wshadow -I/usr/include 
 #flags for the linker
-LDFLAGS   = $(shell root-config --libs) -glibs -lMathMore
+LDFLAGS   = $(shell root-config --libs) -glibs -lMathMore -fopenmp
 #flags used for the linking of the shared object library
 SOFLAGS   = -fPIC -shared
 

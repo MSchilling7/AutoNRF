@@ -132,7 +132,7 @@ void Flux::CorrectingPeakArea()
         minlist2=Functions::Maching2Doubles(Inelastic,E_FINAL,'C',CalibrationData[t],0,'C');
         minlist3=Functions::Maching2Doubles(Inelastic,E_FINAL,'C',Elastic,EX,'C');
     // Feeding Correction of Peak Areas (Top-Down)
-        double Volume, dVolume;
+        double Volume=0, dVolume=0;
         for(unsigned int i=0;i<Inelastic.size();i++)
         {
             if(DetectorAngles[t] == 90)Volume=Inelastic[i][BRANCHING]*calcEfficiency[t][minlist2[i]][2]/calcEfficiency[t][minlist[i]][2]*Inelastic[i][W90]/Elastic[minlist3[i]][W90]*CalibrationData[t][minlist[i]][4];
@@ -173,20 +173,19 @@ void Flux::CorrectingPeakArea()
 void Flux::CalculateICS()
 {
     vector<double> tempVector;
-    
+    double hqc= 197.3269788*1000;//keV fm
 
     for(unsigned int i=0;i<FluxParameter.size();i++){
         tempVector.push_back(FluxParameter[i][2]);
         tempVector.push_back(FluxParameter[i][3]);
         
-        double Energy=FluxParameter[i][2];
+        double Energy=FluxParameter[i][2];//keV
         double J1=FluxParameter[i][4];
         double J0=FluxParameter[i][5];
-        double Gamma=FluxParameter[i][6];
+        double Gamma=FluxParameter[i][6]/1000;//keV
         double Branching=FluxParameter[i][8];
         
-        //Gamma is in eV to get the right Value convert it to keV
-        tempVector.push_back(TMath::Pi()*TMath::Pi()*((2*J1+1)/(2*J0+1))*(hqc/Energy)*(hqc/Energy)*Gamma*(1e-3)*Branching);
+        tempVector.push_back(TMath::Pi()*TMath::Pi()*((2*J1+1)/(2*J0+1))*(hqc/Energy)*(hqc/Energy)*Gamma*Branching);
 
         tempVector.push_back(tempVector[2]*sqrt(Functions::relError2(FluxParameter[i],6,7)+Functions::relError2(FluxParameter[i],8,9)));
         ICS.push_back(tempVector);
@@ -199,7 +198,7 @@ void Flux::CalculateICS()
 
 void Flux::CalculateFlux()
 {
-
+    double NT=Parameter_Flux[7]*1.660539*1e-24;
     vector<vector<vector<double> > >tempVector;
     vector <unsigned int> minlist;
     double Area;
@@ -228,41 +227,28 @@ void Flux::CalculateFlux()
                 PhotonFluxData[i][1]=FluxParameter[j][3];
 
 
-                if(DetectorAngles[t] == 90)
-                {
                     Area=
                     CalibrationData[t][i][4]
                     /Parameter_Flux[5]
                     /calcEfficiency[t][i][2]
                     /ICS[j][2]
-                    /FluxParameter[j][10]
+                    /FluxParameter[j][10+t]*NT
                     ;
-                }
-
-                if(DetectorAngles[t] == 130)
-                {
-                    Area=
-                    CalibrationData[t][i][4]
-                    /Parameter_Flux[5]
-                    /calcEfficiency[t][i][2]
-                    /ICS[j][2]
-                    /FluxParameter[j][11]
-                    ;
-                }
-
 
                 dAreaLow=Area*
                 sqrt(
                     Functions::relError2(Parameter_Flux,5,6)+
-                    Functions::relError2(ICS[j],2,3)
-                    +Functions::relError2(calcEfficiency[t][i],2,3)
+                    Functions::relError2(ICS[j],2,3)+
+                    Functions::relError2(calcEfficiency[t][i],2,3)+
+                    Functions::relError2(CalibrationData[t][i],4,5)
                     );
 
                 dAreaHigh=Area*
                 sqrt(
                     Functions::relError2(Parameter_Flux,5,6)+
-                    Functions::relError2(ICS[j],2,3)
-                    +Functions::relError2(calcEfficiency[t][i],2,4)
+                    Functions::relError2(ICS[j],2,3)+
+                    Functions::relError2(calcEfficiency[t][i],2,4)+
+                    Functions::relError2(CalibrationData[t][i],4,5)
                     );
                 
                 tempVector[t][i][2]=Area;
@@ -302,7 +288,6 @@ void Flux::CalculateFlux()
         double val=0;
         double vallow=0;
         double valhigh=0;
-
         for(unsigned int t=0;t<DetectorAngles.size();t++)
         {
             ScaleLow=Parameter_Efficiency[t][1];
@@ -317,7 +302,8 @@ void Flux::CalculateFlux()
 
             for(unsigned int i=0;i<CalibrationData[t].size();i++)
             {
-                val=EfficiencyFunction.Eval(CalibrationData[t][i][0]);
+                if(t==0)val=EfficiencyFunction.Eval(CalibrationData[t][i][0]-93.7859);
+                if(t==1)val=EfficiencyFunction.Eval(CalibrationData[t][i][0]-86.8684);
                 vallow=fabs(val-EfficiencyFunctionLOW.Eval(CalibrationData[t][i][0]));
                 vallow=vallow*vallow/(val*val)+Functions::relError2(CalibrationData[t][i],4,5);
                 vallow=val*sqrt(vallow);
@@ -418,7 +404,8 @@ void Flux::CallParallelFluxFitThread(void* Address)
 
 bool Flux::PhotonFluxFitter(unsigned int NThread)
 {
-    double Scale, E0;
+    double NT=Parameter_Flux[7]*1.660539*1e-24;
+    double Scale=0, E0=0;
     bool percent[128]={false};
     ThreadIsInitialized[NThread] = true;
     FluxFitFunc FitFunction;
@@ -458,6 +445,7 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
         {
             xvec_flux[j]=random.Gaus(PhotonFluxData[j][0],PhotonFluxData[j][1]);
             yvec_flux[j]=rand_func[j].GetRandom();
+            yvec_flux[j]=yvec_flux[j]/NT;
         }
         // for (int cc = 0; cc <PhotonFluxData.size(); ++cc)
         // {
@@ -467,7 +455,6 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
         TGraph DataGraph((const Int_t)datapoints_flux,xvec_flux,yvec_flux);
         TThread::Lock();
         unsigned int ID = i;
-        TThread::UnLock();
                 for(unsigned int j=1;j<101;j++)
                 {
                     if(j*NFit/100/NumberOfThreads==ID+1 && percent[j]==false)
@@ -487,6 +474,7 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
                         break;
                     }
                 }
+        TThread::UnLock();
 
 
         ROOT::Fit::BinData d;
@@ -514,7 +502,7 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
         TThread::Lock();
             if(0<Scale && Parameter_Flux[2]*1.01<E0 && E0<0.99*Parameter_Flux[3])
             {
-                    FitParameterDistribution[0][ID+NFit/NumberOfThreads*NThread]=Scale;
+                    FitParameterDistribution[0][ID+NFit/NumberOfThreads*NThread]=Scale*NT;
                     FitParameterDistribution[1][ID+NFit/NumberOfThreads*NThread]=E0;
             }
             else
@@ -540,36 +528,42 @@ void Flux::PlotPhotonFlux()
     Double_t xvec_flux[datapoints_flux];
     Double_t dxvec_flux[datapoints_flux];
     Double_t yvec_flux[datapoints_flux];
-    Double_t dyvec_flux[datapoints_flux];
+    Double_t ddownyvec_flux[datapoints_flux];
+    Double_t dupyvec_flux[datapoints_flux];
 
+
+
+    xvec_flux[datapoints_flux-1]=0;
+    dxvec_flux[datapoints_flux-1]=0;
+    yvec_flux[datapoints_flux-1]=0;
+    dupyvec_flux[datapoints_flux-1]=0;
+    ddownyvec_flux[datapoints_flux-1]=0;
+
+    
+    xvec_flux[datapoints_flux-2]=20000;
+    dxvec_flux[datapoints_flux-2]=0;
+    yvec_flux[datapoints_flux-2]=1e50;
+    dupyvec_flux[2]=0;
+    ddownyvec_flux[2]=0;
 
     for(unsigned int i=0;i<PhotonFluxData.size();i++)
     {
         xvec_flux[i]=PhotonFluxData[i][0];
         dxvec_flux[i]=PhotonFluxData[i][1];
         yvec_flux[i]=PhotonFluxData[i][2];
-        dyvec_flux[i]=PhotonFluxData[i][3];
+        ddownyvec_flux[i]=PhotonFluxData[i][3];
+        dupyvec_flux[i]=PhotonFluxData[i][4];
+        // cout<<std::setw(15)<<yvec_flux[i]<<std::setw(15)<<ddownyvec_flux[i]<<std::setw(15)<<dupyvec_flux[i]<<endl;
     }
-
-    xvec_flux[datapoints_flux-1]=0;
-    dxvec_flux[datapoints_flux-1]=0;
-    yvec_flux[datapoints_flux-1]=0;
-    dyvec_flux[datapoints_flux-1]=0;
-
-    
-    xvec_flux[datapoints_flux-2]=20000;
-    dxvec_flux[datapoints_flux-2]=0;
-    yvec_flux[datapoints_flux-2]=1e50;
-    dyvec_flux[2]=0;
-
 
     TCanvas fluxplot("Photon Flux Plot","Photon Flux Plot", 1600,900);
     fluxplot.SetGrid();
     fluxplot.SetLogy();
     fluxplot.GetFrame()->SetFillColor(21);
     fluxplot.GetFrame()->SetBorderSize(12);
-    TGraphErrors fluxdata(datapoints_flux,xvec_flux,yvec_flux,dxvec_flux,dyvec_flux);
-    fluxdata.SetMarkerStyle(20);
+    TGraphAsymmErrors fluxdata(datapoints_flux,xvec_flux,yvec_flux,0,0,ddownyvec_flux,dupyvec_flux);
+    // fluxdata.SetMarkerStyle(20);
+    fluxdata.SetMarkerStyle(6);
     fluxdata.SetMarkerColor(COLOR_FLUX);
     fluxdata.SetMarkerSize(1);
     fluxdata.SetName("Photo Flux Data");
@@ -630,9 +624,11 @@ void Flux::PlotFitParameters()
 {
     TFile* RFile=TFile::Open(rfile.c_str(),"update");
     RFile->cd("Flux");
+    // double NT=Parameter_Flux[7]*1.660539*1e-24;
+    // for(unsigned int i=0;i<FitParameterDistribution[0].size();i++)FitParameterDistribution[0][i]=FitParameterDistribution[0][i]*NT;
     double xlow=TMath::MinElement(NFit,&FitParameterDistribution[0][0]);
     double xhi=TMath::MaxElement(NFit,&FitParameterDistribution[0][0]);
-    int numberofdigits=10*(int)pow(10,fabs(ceil(log10(FitParameterDistribution[0][0]))));
+    double numberofdigits=pow(10,fabs(ceil(log10(xlow))));
     xlow=xlow*numberofdigits;
     xlow=floor(xlow);
     xlow=xlow/numberofdigits;
@@ -647,6 +643,8 @@ void Flux::PlotFitParameters()
 
     TH1D ScalingParameter("Scaling_Parameter", "Scaling Parameter Distribution",100,xlow,xhi);
     for(unsigned int i=0;i<FitParameterDistribution[0].size();i++)ScalingParameter.Fill(FitParameterDistribution[0][i]);
+        // cout<<endl;
+    // for(unsigned int i=0;i<FitParameterDistribution[0].size();i++)cout<<FitParameterDistribution[1][i]<<endl;
 
     double max=ScalingParameter.GetMaximum();
     ScalingParameter.SetMaximum(YSCALE*max);
