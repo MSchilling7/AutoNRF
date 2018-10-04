@@ -43,7 +43,7 @@ public:
     void WriteLog(vector<vector<double> >array);
     void WriteLog(vector<double>array);
     
-    string GetDate(){return Date;};
+    string GetDate()const{return Date;};
     static string dir;
     
 private:

@@ -77,9 +77,9 @@ public:
     void PlotScaleDist();
     void PlotEFunc();
     
-    vector<vector<double> >GetFittedParameters(){return Parameter_All;};
-    vector<vector<vector<double> > >  GetEfficiencyDataArray(){return EfficiencyDataArray;};
-    vector<vector<double> > GetFitParameterDistribution(){return FitParameterDistribution;};
+    vector<vector<double> >GetFittedParameters()const{return Parameter_All;};
+    vector<vector<vector<double> > >  GetEfficiencyDataArray()const{return EfficiencyDataArray;};
+    vector<vector<double> > GetFitParameterDistribution()const{return FitParameterDistribution;};
 private:
 
     //! Storing the threads:

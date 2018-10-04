@@ -90,11 +90,11 @@ public:
     void SetDetectorAngles(vector<double> Angles){DetectorAngles=Angles;};
     
     vector<double> GetFittedParameters();
-    vector<vector<double> > GetPhotonFluxData(){return PhotonFluxData;};
-    vector<vector<double> > GetICS(){return ICS;};
-    vector<vector<double> > GetFitParameterDistribution(){return FitParameterDistribution;};
-    vector<vector<vector<double> > > GetCalibrationData(){return CalibrationData;};
-    vector<vector<vector<double> > > GetCalcEfficiencyCalibrationData(){return calcEfficiency;};
+    vector<vector<double> > GetPhotonFluxData()const{return PhotonFluxData;};
+    vector<vector<double> > GetICS()const{return ICS;};
+    vector<vector<double> > GetFitParameterDistribution()const{return FitParameterDistribution;};
+    vector<vector<vector<double> > > GetCalibrationData()const{return CalibrationData;};
+    vector<vector<vector<double> > > GetCalcEfficiencyCalibrationData()const{return calcEfficiency;};
 
     
     void CalculateEfficiencyforCalibrationData();
