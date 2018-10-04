@@ -352,6 +352,7 @@ void Gamma::CalculateICSResults()
     Mass[0]=Mass[0]/(Mass[2]*u);
     Mass[1]=Mass[1]/(Mass[2]*u);
     double min=0,max=0;
+    vector<double> tempVector;
 
     TH1D ICSHist[ExperimentalDataSorted.size()];
     Percent.resize(NumberOfThreads+1);
@@ -381,6 +382,7 @@ void Gamma::CalculateICSResults()
         min=TMath::MinElement(ICSDist[i].size(),&ICSDist[i][0]);
         max=TMath::MaxElement(ICSDist[i].size(),&ICSDist[i][0]);
         NameOfHist=std::to_string((int)Energy[i][0]);
+        NameOfHist="ICS_"+NameOfHist;
         NameOfHist+="_keV_Peak";
         ICSHist[i]=TH1D(NameOfHist.c_str(),NameOfHist.c_str(),100,min,max);
         for(unsigned int j=0;j<ICSDist[i].size();++j)ICSHist[i].Fill(ICSDist[i][j]);
@@ -406,6 +408,14 @@ void Gamma::CalculateICSResults()
         ICSHist[i].Draw("");
         b_lower.Draw("same");
         b_upper.Draw("same");
+
+        tempVector.push_back(Energy[i][0]);
+        tempVector.push_back(Energy[i][1]);
+        tempVector.push_back(ICSHist[i].GetBinCenter(ICSHist[i].GetMaximumBin()));
+        tempVector.push_back(boundary[0]);
+        tempVector.push_back(boundary[1]);
+        ICS.push_back(tempVector);
+        tempVector.clear();
 
         Can_ICSHist.Write();
         ICSHist[i].Write();

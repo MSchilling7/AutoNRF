@@ -396,6 +396,7 @@ void DataReader::SetSimulationData()
     vector<vector<double> > temp2DVector;
     ifstream Filestream;
     Filestream.open(GetFileName(),std::ifstream::in);
+    int count=0;
     if(Filestream.is_open())
     {   //              file opened successfully so we are here
         cout  <<  "File Opened successfully!!! Reading Simulation Data from file into array"  <<  endl;
@@ -422,6 +423,7 @@ void DataReader::SetSimulationData()
             }
             if(line[0] == '/' && line[1] == '/')
             {
+                ++count;
                 if(temp2DVector.empty())continue;
                 sort(temp2DVector.begin(),temp2DVector.end());
                 simulationData.push_back(temp2DVector);
@@ -439,8 +441,6 @@ void DataReader::SetSimulationData()
     }
     else{cout  <<  "Noooope! Dont gimme a piece of crap!(SimulationData)"  <<  endl;std::exit(0);};
 }
-
-
 
 // ---------------------------------------------------------
 

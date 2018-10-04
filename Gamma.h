@@ -52,7 +52,7 @@ public:
     void SetRootFile(string str){rfile=str;}
     void CalculateResults();
 
-    vector<vector<double> > GetResults(){return Results;};
+    vector<vector<double> > GetICS(){return ICS;};
     vector<vector<double> > GetCalculatedFlux(){return Flux;}
     vector<vector<vector<double> > > GetCalculatedEfficiency(){return calcEfficiency;}
 

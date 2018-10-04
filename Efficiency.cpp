@@ -67,6 +67,10 @@ void Efficiency::CalculateEfficiency()
         EfficiencyDataArray.push_back(temp2DVector);
         temp2DVector.clear();
     }
+
+    for(unsigned int i =0;i<simulationData[0].size();++i)simulationData[0][i][0]=simulationData[0][i][0]-93;
+    for(unsigned int i =0;i<simulationData[1].size();++i)simulationData[1][i][0]=simulationData[1][i][0]-86;
+
 };
 
 // ---------------------------------------------------------
@@ -388,7 +392,7 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
                 xvec_sim[i]=simulationData[t][i][0];
                 yvec_sim[i]=simulationData[t][i][1];
             }
-            Double_t scale=TMath::MaxElement(datapoints_ecal,yvec_ecal)/TMath::MaxElement(datapoints_sim,yvec_sim);
+            Double_t scale=Parameter_All[t][0];
 
             for(unsigned int i = 0;i<simulationData[t].size();i++)yvec_sim[i]=yvec_sim[i]*scale;
 

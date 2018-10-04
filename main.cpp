@@ -460,8 +460,8 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     flux.CalculateEfficiencyforCalibrationData();
     flux.CorrectingPeakArea();
     CalibrationFluxData=flux.GetCalibrationData();
-    // cout<<"Corrected PeakAreas:"<<endl<<endl;
-    // read.Print3DArray(CalibrationFluxData);
+    cout<<"Corrected PeakAreas:"<<endl<<endl;
+    read.Print3DArray(CalibrationFluxData);
     cout<<endl;
     flux.CalculateICS();
     ICS=flux.GetICS();
@@ -542,6 +542,14 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
         FileName="";
     }
 
+    FileName="Results/Experimental_ICS_";
+    FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+    FileName.append(".log");
+    out.SetFileName(FileName);
+    out.FileChecker();
+    out.SetPreDataString("Energy dEnergy ICS dICSmin dICSmax");
+    out.WriteLog(gamma.GetICS());
+    FileName="";
     
 }
 
@@ -552,7 +560,7 @@ join+=Output::dir;
 join+="*/*.pdf ";
 
 
-system(join.c_str());
+// system(join.c_str());
 high_resolution_clock::time_point stop = high_resolution_clock::now();
 duration<double> delta_t = duration_cast< duration<double>>(stop - start);
 cout <<std::fixed<< endl <<  "> main.cpp: Execution took " << delta_t.count() << " seconds" << endl<<endl;
