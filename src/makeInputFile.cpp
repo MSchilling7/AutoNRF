@@ -131,6 +131,7 @@ int main()
 		file<<std::setw(15)<<"dMass";
 		file<<std::setw(15)<<"amu";
 		file<<std::setw(15)<<"LifeTimes";
+		file<<std::endl;
 
 		std::cout<<"Where is the Flux Calibration Parameter file located? (default = Bor_Parameter.dat)"<<std::endl;
 		std::getline(std::cin,input);

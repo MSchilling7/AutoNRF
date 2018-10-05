@@ -1,25 +1,35 @@
+#Directory
+INCDIR = include
+SRCDIR = src
+OBJDIR = obj
+
+
 CXX       = /usr/bin/g++
 #flags for the actual compilation
-CXXFLAGS  = -fPIC -isystem$(shell root-config --incdir) -std=c++11 -g -fopenmp -ggdb -Wall -Wextra -Wconversion -Wshadow -I/usr/include 
+CXXFLAGS  = -fPIC -isystem$(shell root-config --incdir) -std=c++11 -g -fopenmp -ggdb -Wall -Wextra  -Wconversion -Wshadow -I/usr/include -I$(INCDIR)
 #flags for the linker
-LDFLAGS   = $(shell root-config --libs --glibs) -lMathMore -fopenmp
+LDFLAGS   = $(shell root-config --libs --glibs) -lMathMore  -lm -fopenmp
 #flags used for the linking of the shared object library
 SOFLAGS   = -fPIC -shared
 
+
 #user definitions concerning the project
-PROJ    = AutoNRF
-OBJ     = DataReader.o Functions.o Efficiency.o Flux.o Gamma.o Output.o 
-MAIN    = main.o
+PROJ      = AutoNRF
+_OBJ      = DataReader.o Functions.o Efficiency.o Flux.o Gamma.o Output.o
+OBJ       = $(_OBJ:%=$(OBJDIR)/%)
+MAIN      = $(OBJDIR)/main.o
 
 
-HDR     = $(OBJ:%.o=%.h)
-DHDR    = $(PROJ)LinkDef.h
-MAINCPP = $(MAIN:%.o=%.cpp)
+HDR     = $(_OBJ:%.o=$(INCDIR)/%.h)
+DHDR    = $(INCDIR)/$(PROJ)LinkDef.h
+MAINCPP = $(MAIN:$(OBJDIR)/%.o=$(SRCDIR)/%.cpp)
 SANITIZE = -fsanitize=address -fsanitize=undefined
+
 
 INPUT = makeInputFile
 
-all: $(PROJ) $(INPUT)
+
+all: $(INPUT) $(PROJ)
 
 $(PROJ): $(MAIN) lib$(PROJ).so 
 	$(CXX) -o $@ $^ $(LDFLAGS) -L. -l$(PROJ)
@@ -30,8 +40,11 @@ lib$(PROJ).so: $(OBJ) G__$(PROJ).o
 $(MAIN): $(MAINCPP) $(HDR)
 	$(CXX) -o $@ -c $< $(CXXFLAGS)
 
+$(OBJDIR)/%.o: $(SRCDIR)/%.cpp $(HDR)
+	$(CXX) -c -o $@ $< $(CXXFLAGS)  
+
 $(INPUT):
-	$(CXX) -o $(INPUT) $(CXXFLAGS) $(INPUT).cpp
+	$(CXX) -o $(INPUT) $(CXXFLAGS) src/$(INPUT).cpp
 
 # root dictionary generation
 G__$(PROJ).cpp: $(HDR) $(DHDR)
@@ -60,8 +73,8 @@ valvis: $(PROJ)
 run: $(PROJ)
 	LD_LIBRARY_PATH=.:$$LD_LIBRARY_PATH ./$(PROJ) -i input.par -t 4
 #$$ for bash Enviroment Variable
-clean:
-	@rm -rf ${OBJ} G__*  lib$(PROJ).so $(PROJ) *_ACLiC_dict_* *.log ${MAIN} *.d *.pcm *.so *.pdf Output/ $(INPUT); echo Make the Project clean again!
 
 clear:
-	@rm -rf ${OBJ} G__*  lib$(PROJ).so $(PROJ) *_ACLiC_dict_* *.log ${MAIN} *.d *.pcm *.so *.pdf Output/ $(INPUT); echo Make the Project clean again!
+	@rm -rf $(PROJ) $(INPUT) $(OBJDIR)/* G__* Output/ ; echo Make the Project clean again!
+
+clean: clear

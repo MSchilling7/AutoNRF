@@ -20,7 +20,6 @@
 #include <chrono>
 
 #include "Functions.h"
-#include "DataReader.h"
 #include "Output.h"
 
 using std::vector;

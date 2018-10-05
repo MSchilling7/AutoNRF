@@ -18,6 +18,7 @@ using std::vector;
 using std::string;
 using std::ifstream;
 using std::sort;
+
 class DataReader
 {
 public:
