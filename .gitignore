@@ -8,3 +8,4 @@ G__AutoNRF.cpp
 val.log
 massif*
 nfit.sh
+makeInputFile

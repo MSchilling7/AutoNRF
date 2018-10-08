@@ -339,6 +339,13 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             ScalingParameter.Draw("");
             b_lower.Draw("same");
             b_upper.Draw("same");
+
+            std::reverse(FileName.begin(),FileName.end());
+            stringstream ssFile(FileName);
+            FileName="";
+            getline(ssFile,FileName,'/');
+            std::reverse(FileName.begin(),FileName.end());
+
             string str=Output::dir+"Efficiency/Efficiency_Scale_";
             str.append(FileName);
             str.append("_");
@@ -483,6 +490,12 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
         if(ERRORBARS)legend->AddEntry(&EFunctionUP,EFunctionUP.GetName(),"l");
         legend->Draw();
         
+        std::reverse(FileName.begin(),FileName.end());
+        stringstream ssFile(FileName);
+        FileName="";
+        getline(ssFile,FileName,'/');
+        std::reverse(FileName.begin(),FileName.end());
+
 
         string str=Output::dir+"Efficiency/Efficiency_Fit_";
         str.append(std::to_string((int)DetectorAngles[t]));
