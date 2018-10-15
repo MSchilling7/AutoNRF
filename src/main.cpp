@@ -553,14 +553,12 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     
 }
 
-string join="gs -dBATCH -dNOPAUSE -q -sDEVICE=pdfwrite -dAutoRotatePages=/None -sOutputFile=";
-join+=Output::dir;
-join+="final.pdf ";
+string join="pdfunite ";
 join+=Output::dir;
 join+="*/*.pdf ";
-
-
-// system(join.c_str());
+join+=Output::dir;
+join+="final.pdf";
+system(join.c_str());
 high_resolution_clock::time_point stop = high_resolution_clock::now();
 duration<double> delta_t = duration_cast< duration<double>>(stop - start);
 cout <<std::fixed<< endl <<  "> main.cpp: Execution took " << delta_t.count() << " seconds" << endl<<endl;

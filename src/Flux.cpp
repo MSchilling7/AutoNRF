@@ -606,6 +606,12 @@ void Flux::PlotPhotonFlux()
     SchiffDOWN.Draw("same");
     SchiffUP.Draw("same");
     
+    std::reverse(FileName.begin(),FileName.end());
+    stringstream ssFile(FileName);
+    FileName="";
+    getline(ssFile,FileName,'/');
+    std::reverse(FileName.begin(),FileName.end());
+
     string str=Output::dir+"Flux/Flux_Fit_";
     str.append(FileName);
     str.append(".pdf");
@@ -662,6 +668,12 @@ void Flux::PlotFitParameters()
     ScaleParameter.push_back(ScalingParameter.GetBinCenter(ScalingParameter.GetMaximumBin()));
     ScaleParameter.push_back(boundary[0]);
     ScaleParameter.push_back(boundary[1]);
+
+    std::reverse(FileName.begin(),FileName.end());
+    stringstream ssFile(FileName);
+    FileName="";
+    getline(ssFile,FileName,'/');
+    std::reverse(FileName.begin(),FileName.end());
 
     ParameterHistScale.Write();
     string str=Output::dir+"Flux/Flux_Scale_";
