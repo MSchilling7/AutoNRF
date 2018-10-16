@@ -1,0 +1,8 @@
+//Efficency
+//Source           ECal            Sim           NFit  Scale   a0   a1   a2 a3 a4 LiveTimes
+data/56CoData.dat  data/ECal.dat   data/sim.dat  1e5   1        0   0    0  0  0  1 1
+//Flux
+//FluxParameter        Cal                 NFit  scale  E0min E0max  Z   Mass    dMass  amu LifeTimes
+data/Bor_Parameter.dat data/BorPoints.dat  1e5   1      9     11.5   79  0.3993  0.01   11  1  1
+ //Experimental           AnularDist                       Mass   dMass amu Angels
+data/ExperimentalData.dat data/ExperimentalDataAngular.dat 0.3993 0.01 11 90 130
