@@ -17,6 +17,8 @@
 #include <TGraphAsymmErrors.h>
 #include <TFrame.h>
 #include <TLegend.h>
+#include <thread>
+#include <chrono>
 
 #include <TCanvas.h>
 
@@ -50,6 +52,7 @@ using std::string;
 #define ENDPOINT 1.5
 #define EMIN 500
 
+using std::thread;
 
 class Flux
 {
@@ -79,14 +82,14 @@ public:
     FittedParameters(),
     Parameter_Efficiency()
     {;};
-    void SetRootFile(string rootfile){rfile=rootfile;};
-    void SetCalibrationData(vector<vector<vector<double> > >Data){CalibrationData=Data;};
-    void SetFluxParameter(vector<vector<double> > Data){FluxParameter=Data;};
-    void SetEfficiencyParameter(vector<vector<double> >EFit){Parameter_Efficiency=EFit;}
-    void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
-    void SetFitParameters(vector<double>par){Parameter_Flux=par;};
+    void SetRootFile(const string& rootfile){rfile=rootfile;};
+    void SetCalibrationData(const vector<vector<vector<double> > >& Data){CalibrationData=Data;};
+    void SetFluxParameter(const vector<vector<double> >& Data){FluxParameter=Data;};
+    void SetEfficiencyParameter(const vector<vector<double> >& EFit){Parameter_Efficiency=EFit;}
+    void SetFileName(const string& Name){FileName=Name.substr(0,Name.length()-4);};
+    void SetFitParameters(const vector<double>& par){Parameter_Flux=par;};
     void SetNThread(unsigned int t){NumberOfThreads=t;};
-    void SetDetectorAngles(vector<double> Angles){DetectorAngles=Angles;};
+    void SetDetectorAngles(const vector<double>& Angles){DetectorAngles=Angles;};
     
     vector<double> GetFittedParameters();
     vector<vector<double> > GetPhotonFluxData()const{return PhotonFluxData;};
@@ -119,6 +122,8 @@ private:
 
     string FileName= "";
     string rfile = "";
+
+    thread PhotonFluxFitterThreadCaller(unsigned int ID){return thread([=]{PhotonFluxFitter(ID);});}
     vector<double>GetParameterFlux(){return Parameter_Flux;}
     bool PhotonFluxFitter(unsigned int NThread);
     unsigned int NFit,NumberOfFits,NumberOfThreads;

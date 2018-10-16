@@ -46,12 +46,12 @@ public:
     static double LogNormal(double*x,double*par);
     static double Normal2(double*x,double*par);
 
-    static void ShortestCoverage(vector<double> param_array,double boundary[2]);
+    static void ShortestCoverage(const vector<double>& param_array,double boundary[2]);
     
 
-    static vector<unsigned int> Maching2Doubles(vector< vector <double> > a,int anumber,const char aCorR, vector<vector <double> > b, int bnumber,const char bCorR);
-    static double relError2(vector <double> a,int posVal, int posError);
-    static unsigned int MinIndex(double val,vector<vector<vector<double> > > array);
+    static vector<unsigned int> Maching2Doubles(const vector< vector <double> >& a,const int anumber,const char aCorR,const  vector<vector <double> >& b, const int bnumber,const char bCorR);
+    static double relError2(const vector <double>& a,const int posVal,const int posError);
+    static unsigned int MinIndex(const double& val,const vector<vector<vector<double> > >& array);
 private:
 
 };

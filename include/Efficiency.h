@@ -63,15 +63,15 @@ public:
     simulationData(),
     EfficiencyDataArray()
     {;};
-    void SetRootFile(string rootfile){rfile=rootfile;};
-    void SetECalTime(vector<double> Time){ECalTime=Time;};
-    void SetDetectorAngles(vector<double> Angles){DetectorAngles=Angles;};
-    void SetSourceDataArray(vector<vector<vector<double> > > SData){sData=SData;};
-    void SetExperimentalDataArray(vector<vector<vector<double> > >  ECalData){ecalData=ECalData;};
-    void SetSimulationDataArray(vector<vector<vector<double> > > SimData){simulationData=SimData;};
-    void SetFitParameterVector(vector<double> par){Parameter=par;}
+    void SetRootFile(const string& rootfile){rfile=rootfile;};
+    void SetECalTime(const vector<double>& Time){ECalTime=Time;};
+    void SetDetectorAngles(const vector<double>& Angles){DetectorAngles=Angles;};
+    void SetSourceDataArray(const vector<vector<vector<double> > >& SData){sData=SData;};
+    void SetExperimentalDataArray(const vector<vector<vector<double> > >&  ECalData){ecalData=ECalData;};
+    void SetSimulationDataArray(const vector<vector<vector<double> > >& SimData){simulationData=SimData;};
+    void SetFitParameterVector(const vector<double>& par){Parameter=par;}
     void SetNThread(unsigned int t){NumberOfThreads=t;};
-    void SetFileName(string Name){FileName=Name.substr(0,Name.length()-4);};
+    void SetFileName(const string& Name){FileName=Name.substr(0,Name.length()-4);};
     void CalculateEfficiency();
     void FitEfficiency();
     void PlotScaleDist();

@@ -80,7 +80,7 @@ double Functions::jaeckel(double* energy, double *par)
 
 // ---------------------------------------------------------
 
-vector<unsigned int> Functions::Maching2Doubles(vector< vector <double> > a,int anumber,const char aCorR, vector<vector <double> > b, int bnumber,const char bCorR){
+vector<unsigned int> Functions::Maching2Doubles(const vector< vector <double> >& a,const int anumber,const char aCorR,const vector<vector <double> >& b, const int bnumber,const char bCorR){
   vector<double> tempVector;
   vector<vector <double> > diff;
   vector<int> minindex;
@@ -190,7 +190,7 @@ double Functions::Schiff(double *k,double *par)
 
 // ---------------------------------------------------------
 
-double Functions::relError2(vector <double> a,int posVal, int posError)
+double Functions::relError2(const vector <double>& a,const int posVal,const int posError)
   {
     double temp;
     temp= a[posError]/a[posVal];
@@ -200,7 +200,7 @@ double Functions::relError2(vector <double> a,int posVal, int posError)
 
 // ---------------------------------------------------------    
 
-unsigned int Functions::MinIndex(double val,vector<vector<vector<double> > > array)
+unsigned int Functions::MinIndex(const double& val,const vector<vector<vector<double> > >& array)
 {
   double diff=fabs(val-array[0][0][0]);
   unsigned int index=0;
@@ -268,7 +268,7 @@ double Functions::Normal2(double* x,double* par)
 
 // --------------------------------------------------------- 
 
-void Functions::ShortestCoverage(vector<double> param_array,double boundary[2])
+void Functions::ShortestCoverage(const vector<double>& param_array,double boundary[2])
 {
   const unsigned int nq =1000; 
   Double_t xq[nq];  // position where to compute the quantiles in [0,1]

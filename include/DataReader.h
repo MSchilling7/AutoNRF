@@ -41,11 +41,11 @@ public:
     void SetSimulationData();
     void SetCalibrationFluxParameter();
     void SetAngularDistribution();
-    static void Print2DArray(vector<vector<double> > array);
-    static void Print3DArray(vector<vector<vector<double> > > array);
-    static void Print1DArray(vector<int> array);
-    static void Print1DArray(vector<double> array);
-    static void Print1DArray(vector<string> array);
+    static void Print2DArray (const vector<vector<double> >& array);
+    static void Print3DArray (const vector<vector<vector<double> > >& array);
+    static void Print1DArray (const vector<int>& array);
+    static void Print1DArray (const vector<double>& array);
+    static void Print1DArray (const vector<string>& array);
     
     vector<vector<double> > GetFitParameterArray_Efficency()const{return fitParameterarray_Efficency;};
     vector<vector<double> > GetFitParameterArray_Flux()const{return fitParameterarray_Flux;};

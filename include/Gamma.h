@@ -39,21 +39,21 @@ public:
     Gamma(const Gamma&)
 
     {;};
-    void SetEfficiencyParameter(vector<vector<double> >data){Parameter_Efficiency=data;};
-    void SetFluxParameter(vector<double> data){Parameter_Flux=data;};
-    void SetTargetMass(vector<double> data){Mass=data;};
-    void SetExperimentalData(vector<vector<vector<double> > > data){ExperimentalData=data;};
-    void SetDetectorAngles(vector<double> data){DetectorAngles=data;}
-    void SetExperimentalDataAngular(vector<vector<double> >data){ExperimentalDataAngular=data;}
-    void SetFluxFitParameterDistribution(vector<vector<double> > data){FluxFitParameterDistribution=data;};
-    void SetEfficiencyFitParameterDistribution(vector<vector<double> > data){EfficiencyFitParameterDistribution=data;};
-    void SetNThread(unsigned int t){NumberOfThreads=t;};
-    void SetRootFile(string str){rfile=str;}
+    void SetEfficiencyParameter(const vector<vector<double> >& data){Parameter_Efficiency=data;};
+    void SetFluxParameter(const vector<double>& data){Parameter_Flux=data;};
+    void SetTargetMass(const vector<double>& data){Mass=data;};
+    void SetExperimentalData(const vector<vector<vector<double> > >& data){ExperimentalData=data;};
+    void SetDetectorAngles(const vector<double>& data){DetectorAngles=data;}
+    void SetExperimentalDataAngular(const vector<vector<double> >data){ExperimentalDataAngular=data;}
+    void SetFluxFitParameterDistribution(const vector<vector<double> >& data){FluxFitParameterDistribution=data;};
+    void SetEfficiencyFitParameterDistribution(const vector<vector<double> >& data){EfficiencyFitParameterDistribution=data;};
+    void SetNThread(const unsigned int t){NumberOfThreads=t;};
+    void SetRootFile(const string& str){rfile=str;}
     void CalculateResults();
 
-    vector<vector<double> > GetICS(){return ICS;};
-    vector<vector<double> > GetCalculatedFlux(){return Flux;}
-    vector<vector<vector<double> > > GetCalculatedEfficiency(){return calcEfficiency;}
+    vector<vector<double> > GetICS()const{return ICS;};
+    vector<vector<double> > GetCalculatedFlux()const{return Flux;}
+    vector<vector<vector<double> > > GetCalculatedEfficiency()const{return calcEfficiency;}
 
 private:
     void CalculateFluxResults();

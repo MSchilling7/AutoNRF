@@ -489,7 +489,7 @@ void DataReader::SetAngularDistribution()
 
 // ---------------------------------------------------------
 
-void DataReader::Print2DArray(vector<vector<double> > array){
+void DataReader::Print2DArray(const vector<vector<double> >& array){
     for(unsigned int i=0;i<array.size();i++)
     {
         for(unsigned int j=0;j<array[i].size();j++){
@@ -502,7 +502,7 @@ void DataReader::Print2DArray(vector<vector<double> > array){
 
 // ---------------------------------------------------------
 
-void DataReader::Print3DArray(vector<vector<vector<double> > > array)
+void DataReader::Print3DArray(const vector<vector<vector<double> > >& array)
 {
     for(unsigned int i=0;i<array.size();i++)
     {
@@ -513,7 +513,7 @@ void DataReader::Print3DArray(vector<vector<vector<double> > > array)
 
 // ---------------------------------------------------------
 
-void DataReader::Print1DArray(vector<int> array)
+void DataReader::Print1DArray(const vector<int>& array)
 {
     for(unsigned int i=0;i<array.size();i++)cout  << std::scientific <<  array[i]  <<  endl;
     cout<<endl;
@@ -521,7 +521,7 @@ void DataReader::Print1DArray(vector<int> array)
 
 // ---------------------------------------------------------
 
-void DataReader::Print1DArray(vector<double> array)
+void DataReader::Print1DArray(const vector<double>& array)
 {
     for(unsigned int i=0;i<array.size();i++)cout  << std::scientific <<  array[i]  <<  endl;
     cout<<endl;
@@ -529,7 +529,7 @@ void DataReader::Print1DArray(vector<double> array)
 
 // ---------------------------------------------------------
 
-void DataReader::Print1DArray(vector<string> array)
+void DataReader::Print1DArray(const vector<string>& array)
 {
     for(unsigned int i=0;i<array.size();i++)cout  <<  array[i]  <<  endl;
     cout<<endl;
