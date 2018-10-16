@@ -1,5 +1,6 @@
 *.o
 Output/*
+build/*
 *.pcm
 *.d
 *.so
