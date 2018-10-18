@@ -68,9 +68,6 @@ void Efficiency::CalculateEfficiency()
         temp2DVector.clear();
     }
 
-    for(unsigned int i =0;i<simulationData[0].size();++i)simulationData[0][i][0]=simulationData[0][i][0]-93;
-    for(unsigned int i =0;i<simulationData[1].size();++i)simulationData[1][i][0]=simulationData[1][i][0]-86;
-
 };
 
 // ---------------------------------------------------------

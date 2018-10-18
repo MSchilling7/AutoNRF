@@ -41,6 +41,7 @@ public:
     void SetFileName(string Name);
     void SetPreDataString(string line);
     void WriteLog(vector<vector<double> >array);
+    void WriteLogT(vector<vector<double> >array);
     void WriteLog(vector<double>array);
     
     string GetDate()const{return Date;};

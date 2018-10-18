@@ -53,6 +53,7 @@ void Output::SetFileName(string Name)
     Name.append(".log");
     FileName=dir;
     FileName+=Name;
+
 }
 
 // ---------------------------------------------------------
@@ -64,6 +65,22 @@ void Output::WriteLog(vector<vector<double> >array){
         for(unsigned int j=0;j<array[i].size();j++)
         {
             LogFile  << std::setw(20)<<array[i][j];
+        }
+        LogFile<<std::endl;
+    }
+    LogFile.close();
+    cout<<"Log was written to "<<FileName<<endl;
+}
+
+// ---------------------------------------------------------
+
+void Output::WriteLogT(vector<vector<double> >array){
+    LogFile.open(FileName.c_str(),std::ofstream::app);
+    for(unsigned int i=0;i<array[0].size();i++)
+    {
+        for(unsigned int j=0;j<array.size();j++)
+        {
+            LogFile  << std::setw(20)<<array[j][i];
         }
         LogFile<<std::endl;
     }

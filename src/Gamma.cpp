@@ -419,7 +419,7 @@ void Gamma::CalculateICSResults()
 
         Can_ICSHist.Write();
         ICSHist[i].Write();
-        NameOfHist=Output::dir+"Results/ICS_"+NameOfHist;
+        NameOfHist=Output::dir+"Results/"+NameOfHist;
         NameOfHist+=".pdf";
         Can_ICSHist.SaveAs(NameOfHist.c_str());
         cout<<"Distribution of ICS saved. ( "<<NameOfHist<<" )"<<endl;

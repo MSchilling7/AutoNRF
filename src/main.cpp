@@ -37,6 +37,7 @@ int main(int argc, char **argv)
   bool rootbool     = false;
   bool threadbool   = false;
   bool dirbool      = false;
+  bool exportbool   = false;
   int c           = 0;
   
   string InputFile ="";
@@ -55,13 +56,14 @@ int main(int argc, char **argv)
           {"thread",                 required_argument,       0, 't'},
           {"root",                   required_argument,       0, 'r'},
           {"dir",                    required_argument,       0, 'd'},
+          {"exportdist",             no_argument,             0, 'e'},
           {"help",                   no_argument,             0, 'h'},
           {"help",                   no_argument,             0, '?'}
       };
       /* getopt_long stores the option index here. */
       int option_index = 0;
 
-      c = getopt_long (argc, argv, "i:t:r:d:h:?",
+      c = getopt_long (argc, argv, "i:t:r:d:eh?",
          long_options, &option_index);
 
       switch (c)
@@ -88,6 +90,10 @@ int main(int argc, char **argv)
         case 'd':
         dirname=optarg;
         dirbool=true;
+        break;
+
+        case 'e':
+        exportbool=true;
         break;
 
         case 'h':
@@ -386,6 +392,14 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
 
         TargetMass=read.GetTargetMassArray();
 
+        ISourceDataFile                   =ISourceDataFile.substr(ISourceDataFile.find_last_of('/')+1,ISourceDataFile.length()) ;
+        IECalibrationDataFile             =IECalibrationDataFile.substr(IECalibrationDataFile.find_last_of('/')+1,IECalibrationDataFile.length()) ;
+        ISimulationDataFile               =ISimulationDataFile.substr(ISimulationDataFile.find_last_of('/')+1,ISimulationDataFile.length()) ;
+        IFCalibrationParameterFile        =IFCalibrationParameterFile.substr(IFCalibrationParameterFile.find_last_of('/')+1,IFCalibrationParameterFile.length()) ;
+        IFCalibrationFluxDataFile         =IFCalibrationFluxDataFile.substr(IFCalibrationFluxDataFile.find_last_of('/')+1,IFCalibrationFluxDataFile.length()) ;
+        IExperimentalDataFile             =IExperimentalDataFile.substr(IExperimentalDataFile.find_last_of('/')+1,IExperimentalDataFile.length()) ;
+        IExperimentalAngularDataFile      =IExperimentalAngularDataFile.substr(IExperimentalAngularDataFile.find_last_of('/')+1,IExperimentalAngularDataFile.length()) ;
+
     cout<<"Reading Data Complete!"<<endl;
     // // // // // // // // // // // // // // // // // // // // // // // // // // // // //     
     // // // 
@@ -551,14 +565,37 @@ for(unsigned int i=0;i<DataFileArray.size();i++)
     out.WriteLog(gamma.GetICS());
     FileName="";
     
+    if(exportbool)
+    {
+        FileName="Efficiency/Efficiency_Scale_dist";
+        FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+        FileName.append(".log");
+        out.SetFileName(FileName);
+        string PreString="";
+        for(unsigned int i = 0 ; i<DetectorAngles.size();i++)
+        {
+            PreString=std::to_string((int)DetectorAngles[i]);
+            PreString+=" ";
+        }
+        out.SetPreDataString(PreString.c_str());
+        out.WriteLogT(effi.GetFitParameterDistribution());
+
+        FileName="Flux/Flux_dist";
+        FileName.append(IExperimentalDataFile.substr(0,IExperimentalDataFile.size()-4));
+        FileName.append(".log");
+        out.SetFileName(FileName);
+        out.SetPreDataString("Scale E0");
+        out.WriteLogT(flux.GetFitParameterDistribution());
+
+
+
+
+    }
 }
 
-string join="pdfunite ";
-join+=Output::dir;
-join+="*/*.pdf ";
-join+=Output::dir;
-join+="final.pdf";
-system(join.c_str());
+
+
+
 high_resolution_clock::time_point stop = high_resolution_clock::now();
 duration<double> delta_t = duration_cast< duration<double>>(stop - start);
 cout <<std::fixed<< endl <<  "> main.cpp: Execution took " << delta_t.count() << " seconds" << endl<<endl;

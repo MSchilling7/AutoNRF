@@ -1,26 +1,32 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.5.2)
 project(AutoNRF)
-set(CMAKE_BUILD_TYPE DEBUG)
+#set(CMAKE_BUILD_TYPE DEBUG)
 set(PROJECT_VERSION 1.0)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 11 CACHE STRING "Select the C++ Standard")
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 message(STATUS "Using C++${CMAKE_CXX_STANDARD}")
 
-#if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
-  #set(CMAKE_BUILD_TYPE RELWITHDEBINFO)
-#endif()
-#set(CMAKE_ALLOWED_BUILD_TYPES DEBUG RELEASE RELWITHDEBINFO)
-#if(NOT ";${CMAKE_BUILD_TYPE};" MATCHES ";${CMAKE_ALLOWED_BUILD_TYPES};")
-  #message(FATAL_ERROR "Invalid build type ${CMAKE_BUILD_TYPE}. Use one of: ${CMAKE_ALLOWED_BUILD_TYPES}.")
-#endif()
-#set(CMAKE_VERBOSE_MAKEFILE OFF)
-#set(CMAKE_RULE_MESSAGES OFF)
-#set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -ggdb -DDEBUG -D__DEBUG")
-#set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -ggdb")
-#set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -ftree-vectorize -ffast-math -DNODEBUG")
-#message(STATUS "Using CXX flags for ${CMAKE_BUILD_TYPE}: ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
+#ccmake options
+set(CMAKE_BUILD_TYPE RELEASE)
+set(CMAKE_VERBOSE_MAKEFILE OFF CACHE BOOL "Verbosity of Makefile")
+set(CMAKE_RULE_MESSAGES ON CACHE BOOL "Messages of")
+set(INSTALL ${CMAKE_CURRENT_BINARY_DIR}/install CACHE PATH "Install Path")
+set_property(CACHE CMAKE_CXX_STANDARD PROPERTY STRINGS 11 14 17)
+set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS DEBUG RELEASE RELWITHDEBINFO)
+mark_as_advanced(CLEAR CMAKE_VERBOSE_MAKEFILE CMAKE_RULE_MESSAGES INSTALL)
 
+
+set(CMAKE_CXX_FLAGS_DEBUG "-Wall -O0 -g -ggdb -DDEBUG -D__DEBUG")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELEASE} -ggdb")
+set(CMAKE_CXX_FLAGS_RELEASE "-O3 -march=native -DNODEBUG")
+find_package(OpenMP) 
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}" )
+    set (${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} "${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}} ${OpenMP_CXX_FLAGS}")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+endif()
+message(STATUS "Using CXX flags for ${CMAKE_BUILD_TYPE}: ${CMAKE_CXX_FLAGS_${CMAKE_BUILD_TYPE}}")
 
 include(ProcessorCount)
 ProcessorCount(N)
@@ -30,6 +36,8 @@ if(NOT N EQUAL 0)
   set(CMAKE_MAKE_PROGRAM "${CMAKE_MAKE_PROGRAM} -j ${N}")      
 endif()
 
+
+
 set(SOURCES
       src/DataReader.cpp
       src/Efficiency.cpp
@@ -38,9 +46,6 @@ set(SOURCES
       src/Gamma.cpp  
       src/Output.cpp
         )
-
-
-set(PROJECT_BINARY_DIR ./install)
 
 string(REPLACE ".cpp" ".h" HEADERS_ "${SOURCES}")
 string(REPLACE "src/" "" HEADERS "${HEADERS_}")
@@ -73,19 +78,10 @@ add_executable(autoNRF src/main.cpp)
 target_include_directories(autoNRF PRIVATE ${CMAKE_SOURCE_DIR}/include)
 target_link_libraries(autoNRF ${ROOT_LIBRARIES} AutoNRF )
 
-find_package(OpenMP) 
-if (OPENMP_FOUND)
-    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}" )
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
-    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-endif()
 
 add_custom_target(new COMMAND @rm -rf ${CMAKE_CURRENT_BINARY_DIR}/* && cmake ${CMAKE_SOURCE_DIR} && make -j)
 add_custom_target(purge COMMAND @rm -rf ${CMAKE_CURRENT_BINARY_DIR}/*)
 
-
-
-set(INSTALL ${CMAKE_CURRENT_BINARY_DIR}/install)
 
 if(NOT DEFINED ${CMAKE_INSTALL_PREFIX})
   if(NOT EXISTS ${INSTALL})
@@ -102,7 +98,7 @@ install(TARGETS AutoNRF autoNRF makeInputFile
         )
 
 
-INSTALL( FILES ${CMAKE_CURRENT_BINARY_DIR}/${PCM_FILE_NAME}_rdict.pcm 
+install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${PCM_FILE_NAME}_rdict.pcm 
              DESTINATION ${CMAKE_INSTALL_PREFIX}
              COMPONENT dict)
 
