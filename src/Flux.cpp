@@ -302,8 +302,7 @@ void Flux::CalculateFlux()
 
             for(unsigned int i=0;i<CalibrationData[t].size();i++)
             {
-                if(t==0)val=EfficiencyFunction.Eval(CalibrationData[t][i][0]-93.7859);
-                if(t==1)val=EfficiencyFunction.Eval(CalibrationData[t][i][0]-86.8684);
+                val=EfficiencyFunction.Eval(CalibrationData[t][i][0]);
                 vallow=fabs(val-EfficiencyFunctionLOW.Eval(CalibrationData[t][i][0]));
                 vallow=vallow*vallow/(val*val)+Functions::relError2(CalibrationData[t][i],4,5);
                 vallow=val*sqrt(vallow);
@@ -435,7 +434,8 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
     TF1 rand_func[PhotonFluxData.size()];
     for(unsigned int j=0;j<PhotonFluxData.size();j++)
     {
-        rand_func[j]=TF1("",Functions::Normal2,0.5*(PhotonFluxData[j][2]-PhotonFluxData[j][3]),1.5*(PhotonFluxData[j][2]+PhotonFluxData[j][4]),3);
+        int range=5;//sigmas range for Function
+        rand_func[j]=TF1("",Functions::Normal2,(PhotonFluxData[j][2]-range*PhotonFluxData[j][3]),(PhotonFluxData[j][2]+range*PhotonFluxData[j][4]),3);
         rand_func[j].SetParameters(PhotonFluxData[j][2],PhotonFluxData[j][3],PhotonFluxData[j][4]);            
     }
     for(unsigned int i=0;i<NFit/NumberOfThreads;i++)
