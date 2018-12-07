@@ -81,6 +81,7 @@ target_link_libraries(autoNRF ${ROOT_LIBRARIES} AutoNRF )
 
 add_custom_target(new COMMAND @rm -rf ${CMAKE_CURRENT_BINARY_DIR}/* && cmake ${CMAKE_SOURCE_DIR} && make -j)
 add_custom_target(purge COMMAND @rm -rf ${CMAKE_CURRENT_BINARY_DIR}/*)
+add_custom_target(cpdata ALL COMMAND @cp -r ${CMAKE_SOURCE_DIR}/data ${CMAKE_SOURCE_DIR}/input.par ${CMAKE_CURRENT_BINARY_DIR} )
 
 
 if(NOT DEFINED ${CMAKE_INSTALL_PREFIX})
@@ -93,15 +94,13 @@ endif()
 add_executable(makeInputFile src/makeInputFile.cpp)
 
 
-install(TARGETS AutoNRF autoNRF makeInputFile
+install(TARGETS AutoNRF autoNRF makeInputFile 
         DESTINATION ${CMAKE_INSTALL_PREFIX}
         )
-
 
 install( FILES ${CMAKE_CURRENT_BINARY_DIR}/${PCM_FILE_NAME}_rdict.pcm 
              DESTINATION ${CMAKE_INSTALL_PREFIX}
              COMPONENT dict)
-
 
 install(DIRECTORY ${CMAKE_SOURCE_DIR}/
        DESTINATION ${CMAKE_INSTALL_PREFIX}
