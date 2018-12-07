@@ -464,10 +464,10 @@ bool Flux::PhotonFluxFitter(unsigned int NThread)
                         for(unsigned int p=0;p<NumberOfThreads;p++)val+=Percent[p];
                         Percent[Percent.size()-1]=val/NumberOfThreads;
                         cout<<"\r";
-                        for(unsigned int p=0;p<NumberOfThreads;p++)
-                            {
-                                cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
-                            }
+                        // for(unsigned int p=0;p<NumberOfThreads;p++)
+                        //     {
+                        //         cout<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
+                        //     }
                             cout<<"Total: "<<Percent[Percent.size()-1]<<"%";
                             cout<<std::flush;
                         percent[j]=true;

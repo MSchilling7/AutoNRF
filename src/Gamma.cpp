@@ -329,10 +329,10 @@ void Gamma::CalculateICSDist(unsigned int ID,unsigned int fits)
                     for(unsigned int p=0;p<NumberOfThreads;++p)val+=Percent[p];
                     Percent[Percent.size()-1]=val/NumberOfThreads;
                     cout<<"\r";
-                    for(unsigned int p=0;p<NumberOfThreads;++p)
-                        {
-                            cout<<std::fixed<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
-                        }
+                    // for(unsigned int p=0;p<NumberOfThreads;++p)
+                    //     {
+                    //         cout<<std::fixed<<"Thread "<<p<<": "<<Percent[p]<<"%\t";
+                    //     }
                         cout<<"Total: "<<std::fixed<<Percent[Percent.size()-1]<<"%";
                         cout<<std::flush;
                     percent[j]=true;
