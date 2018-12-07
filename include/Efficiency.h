@@ -9,6 +9,8 @@
 #define Efficiency_H 1
 
 #include <vector>
+#include <numeric>
+#include <functional> 
 #include <TCanvas.h>
 #include <TMath.h>
 #include <TMultiGraph.h>
@@ -91,6 +93,8 @@ private:
     static void CallParallelEfficiencyFitThread(void* Adress);
 
     bool EfficiencyFitter(unsigned int NThread);
+    double ScaleVal(const std::vector<double>& x,const std::vector<double>& y){double mean=std::inner_product(x.begin(), x.end(), y.begin(), 0.0,std::plus<double>(),std::divides<double>()); mean=mean/((double)x.size()); return mean;}
+    
 
     string rfile;
     string FileName;

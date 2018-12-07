@@ -205,23 +205,28 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
             EFunction.ReleaseParameter(0);
         
             int datapoints_ecal=(int)Data[NDetector].size();
-            Double_t xvec_ecal[datapoints_ecal];
-            Double_t yvec_ecal[datapoints_ecal];
+            // Double_t xvec_ecal[datapoints_ecal];
+            // Double_t yvec_ecal[datapoints_ecal];
+            // Double_t yvec_sim[datapoints_ecal];
+
+            std::vector<double> yvec_ecal(datapoints_ecal,0);
+            std::vector<double> yvec_sim(datapoints_ecal,0);
         
             TRandom3 random(0);
         
-            ROOT::Fit::Fitter TheFitter;
+            // ROOT::Fit::Fitter TheFitter;
             // TheFitter.Config().SetMinimizer("GSLMultiFit");
-            TheFitter.Config().SetMinimizer("Minuit2","Combined");
-            TheFitter.SetFunction(FitFunction);
-            TheFitter.Config().MinimizerOptions().SetPrintLevel(0);
+            // TheFitter.Config().SetMinimizer("Minuit2","Combined");
+            // TheFitter.SetFunction(FitFunction);
+            // TheFitter.Config().MinimizerOptions().SetPrintLevel(0);
         
                 for(unsigned int j=0;j<Data[NDetector].size();j++)
                 {
-                    xvec_ecal[j]=random.Gaus(Data[NDetector][j][0],Data[NDetector][j][1]);
+                    // xvec_ecal[j]=random.Gaus(Data[NDetector][j][0],Data[NDetector][j][1]);
                     yvec_ecal[j]=random.Gaus(Data[NDetector][j][2],Data[NDetector][j][3]);
+                    yvec_sim[j]=EFunction.Eval(random.Gaus(Data[NDetector][j][0],Data[NDetector][j][1]));
                 }
-                TGraph DataGraph((const Int_t)datapoints_ecal,xvec_ecal,yvec_ecal);
+                // TGraph DataGraph((const Int_t)datapoints_ecal,xvec_ecal,yvec_ecal);
                 TThread::Lock();
                 unsigned int ID = i;
                 for(unsigned int j=1;j<101;j++)
@@ -244,34 +249,36 @@ bool Efficiency::EfficiencyFitter(unsigned int NThread)
                     }
                 }
                 TThread::UnLock();
-                ROOT::Fit::BinData d;
-                ROOT::Fit::FillData(d,&DataGraph); 
-                // TheFitter.Config().ParSettings(0).SetName("Scale");
-                TheFitter.Config().ParSettings(0).SetValue(Par[NDetector][0]);
-                // TheFitter.Config().ParSettings(1).SetName("a0");
-                TheFitter.Config().ParSettings(1).SetValue(Par[NDetector][1]);
-                TheFitter.Config().ParSettings(1).Fix();
-                // TheFitter.Config().ParSettings(2).SetName("a1");
-                TheFitter.Config().ParSettings(2).SetValue(Par[NDetector][2]);
-                TheFitter.Config().ParSettings(2).Fix();
-                // TheFitter.Config().ParSettings(3).SetName("a2");
-                TheFitter.Config().ParSettings(3).SetValue(Par[NDetector][3]);
-                TheFitter.Config().ParSettings(3).Fix();
-                // TheFitter.Config().ParSettings(4).SetName("a3");
-                TheFitter.Config().ParSettings(4).SetValue(Par[NDetector][4]);
-                TheFitter.Config().ParSettings(4).Fix();
-                // TheFitter.Config().ParSettings(5).SetName("a4");
-                TheFitter.Config().ParSettings(5).SetValue(Par[NDetector][5]);
+                // ROOT::Fit::BinData d;
+                // ROOT::Fit::FillData(d,&DataGraph); 
+                // // TheFitter.Config().ParSettings(0).SetName("Scale");
+                // TheFitter.Config().ParSettings(0).SetValue(Par[NDetector][0]);
+                // // TheFitter.Config().ParSettings(1).SetName("a0");
+                // TheFitter.Config().ParSettings(1).SetValue(Par[NDetector][1]);
+                // TheFitter.Config().ParSettings(1).Fix();
+                // // TheFitter.Config().ParSettings(2).SetName("a1");
+                // TheFitter.Config().ParSettings(2).SetValue(Par[NDetector][2]);
+                // TheFitter.Config().ParSettings(2).Fix();
+                // // TheFitter.Config().ParSettings(3).SetName("a2");
+                // TheFitter.Config().ParSettings(3).SetValue(Par[NDetector][3]);
+                // TheFitter.Config().ParSettings(3).Fix();
+                // // TheFitter.Config().ParSettings(4).SetName("a3");
+                // TheFitter.Config().ParSettings(4).SetValue(Par[NDetector][4]);
+                // TheFitter.Config().ParSettings(4).Fix();
+                // // TheFitter.Config().ParSettings(5).SetName("a4");
+                // TheFitter.Config().ParSettings(5).SetValue(Par[NDetector][5]);
             
-                bool ReturnCode = false;
-                ReturnCode = TheFitter.Fit(d);
-                if(ReturnCode == true)
+                // bool ReturnCode = false;
+                // ReturnCode = TheFitter.Fit(d);
+                // if(ReturnCode == true)
                 {
-                    Scale = TheFitter.Result().Parameter(0);
+                    // Scale = TheFitter.Result().Parameter(0);
                     // TThread::Printf("Thread %i: Results E0= %.5f     Scale= %.5f    Nr: %i", NThread, E0,Scale,ID);
                     // TThread::Printf("Thread %i: ID=%i     i=%i",NThread,ID,ID+NumberofFits*NThread);
                 }
-                FitParameterDistribution[NDetector][ID+NumberofFits*NThread]=Scale;
+                // FitParameterDistribution[NDetector][ID+NumberofFits*NThread]=Scale;
+                // TThread::Printf("%f",ScaleVal(yvec_ecal,yvec_sim));
+                FitParameterDistribution[NDetector][ID+NumberofFits*NThread]=ScaleVal(yvec_ecal,yvec_sim);
         }
     }
     ThreadIsFinished[NThread]=true;

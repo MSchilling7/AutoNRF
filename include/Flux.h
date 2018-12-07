@@ -137,7 +137,6 @@ private:
     vector<double> Parameter_Flux,DetectorAngles;
     vector<double> ScaleParameter,EndPointParameter,FittedParameters;
     vector<vector<double> > Parameter_Efficiency;
-    
 
 };
 class ThreadCallerFlux
